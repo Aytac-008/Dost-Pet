@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dost Pet — Hər heyvan sevgi dolu bir evə layiqdir. Azərbaycanda övladlığa heyvan götürmə platforması.">
+    <meta name="keywords" content="dost pet, heyvan, it, pişik, baytar, sığınacaq, Azərbaycan, Bakı">
+    <meta name="theme-color" content="#2563eb">
+    <meta property="og:title" content="DOST PET">
+    <meta property="og:description" content="Dost Pet connects rescued animals with loving homes across Azerbaijan.">
+    <title>DOST PET</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest">
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+                            400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+                            800: '#1e40af', 900: '#1e3a8a', 950: '#172554'
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-soft': 'pulseSoft 2s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        pulseSoft: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.7' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.72);
+            --glass-border: rgba(255, 255, 255, 0.24);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+        .dark {
+            --glass-bg: rgba(15, 15, 26, 0.78);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
+        }
+        .glass {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 1.25rem;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 25%, #06b6d4 50%, #6366f1 75%, #8b5cf6 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            padding: 0.75rem 1.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+        }
+        .btn-secondary {
+            background: white;
+            color: #2563eb;
+            padding: 0.75rem 1.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            border: 2px solid #2563eb;
+            transition: all 0.3s ease;
+        }
+        .dark .btn-secondary {
+            background: transparent;
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+        .btn-secondary:hover {
+            background: #eff6ff;
+            transform: translateY(-2px);
+        }
+        .dark .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Page System */
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        /* Map */
+        #leaflet-map { height: 450px; width: 100%; border-radius: 1rem; z-index: 1; }
+        .leaflet-container { border-radius: 1rem; z-index: 1; }
+
+        /* Pet Card */
+        .pet-card-img { aspect-ratio: 1/1; object-fit: cover; border-radius: 1rem 1rem 0 0; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px); z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-overlay.hidden { display: none; }
+
+        /* Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 0.5rem;
+        }
+        .dark .skeleton {
+            background: linear-gradient(90deg, #1f1f2e 25%, #2a2a3e 50%, #1f1f2e 75%);
+            background-size: 200% 100%;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+        }
+
+        @media (max-width: 640px) {
+            .glass-card:hover { transform: none; }
+            #pet-filters { overflow-x: auto; max-width: 100%; padding-bottom: 0.25rem; }
+            #pet-filters .filter-btn { flex: 0 0 auto; }
+            .leaflet-popup-content { max-width: 220px; }
+        }
+
+        html, body { max-width: 100%; overflow-x: hidden; }
+        button, a, select, input { touch-action: manipulation; }
+        .logo-mark { width: 2.25rem; height: 2.25rem; flex: 0 0 auto; }
+        .profile-grid { display: grid; gap: 1.5rem; }
+        .status-dot { width: .65rem; height: .65rem; border-radius: 9999px; flex: 0 0 auto; }
+        .toast { position: fixed; right: 1rem; bottom: 1rem; z-index: 200; max-width: min(24rem, calc(100vw - 2rem)); }
+        .input-field { width: 100%; padding: .8rem 1rem; border-radius: .8rem; outline: none; background: rgba(255,255,255,.75); border: 1px solid #dbeafe; }
+        .dark .input-field { background: rgba(17,24,39,.72); border-color: #374151; color: white; }
+        .input-field:focus { box-shadow: 0 0 0 3px rgba(59,130,246,.28); border-color: #3b82f6; }
+        @media (min-width: 768px) { .profile-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-[#0f0f1a] dark:text-gray-100 font-sans transition-colors duration-300">
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="sticky top-0 z-50 glass" role="banner">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a href="#" class="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white" onclick="navigateTo('home')" aria-label="Dost Pet Home">
+                    <span class="logo-mark rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center"><i data-lucide="paw-print" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i></span><span>Dost Pet</span>
+                </a>
+
+                <!-- Desktop Nav -->
+                <div class="hidden lg:flex items-center gap-5 xl:gap-7">
+                    <button onclick="navigateTo('home')" class="nav-link text-sm font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors" data-page="home" data-i18n="home">Home</button>
+                    <button onclick="navigateTo('adopt')" class="nav-link text-sm font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors" data-page="adopt" data-i18n="adopt">Adopt</button>
+                    <button onclick="navigateTo('veterinary')" class="nav-link text-sm font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors" data-page="veterinary" data-i18n="veterinary">Veterinary</button>
+                    <button onclick="navigateTo('shelters')" class="nav-link text-sm font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors" data-page="shelters" data-i18n="shelters">Shelters</button>
+                    <button onclick="navigateTo('petshops')" class="nav-link text-sm font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors" data-page="petshops" data-i18n="petshops">Pet Shops</button>
+                    <button onclick="navigateTo('about')" class="nav-link text-sm font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors" data-page="about" data-i18n="about">About</button>
+                    <button onclick="navigateTo('contact')" class="nav-link text-sm font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors" data-page="contact" data-i18n="contact">Contact</button>
+                </div>
+
+                <!-- Desktop Actions -->
+                <div class="hidden lg:flex items-center gap-3">
+                    <div class="flex items-center gap-1 mr-2">
+                        <button onclick="setLanguage('az')" class="lang-btn px-2 py-1 text-xs font-semibold rounded-full transition-colors" data-lang="az">AZ</button>
+                        <button onclick="setLanguage('ru')" class="lang-btn px-2 py-1 text-xs font-semibold rounded-full transition-colors" data-lang="ru">RU</button>
+                        <button onclick="setLanguage('en')" class="lang-btn px-2 py-1 text-xs font-semibold rounded-full transition-colors" data-lang="en">EN</button>
+                    </div>
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="Toggle dark mode">
+                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                    </button>
+                    <button id="desktop-login-btn" onclick="navigateTo('login')" class="btn-secondary text-sm !py-2 !px-4" data-i18n="login">Login</button>
+                    <button id="desktop-profile-btn" onclick="navigateTo('profile')" class="hidden btn-primary text-sm !py-2 !px-4" data-i18n="profile">Profile</button>
+                    <button id="desktop-register-btn" onclick="openModal('register-modal')" class="btn-primary text-sm !py-2 !px-4" data-i18n="register">Register</button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <button onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="lg:hidden hidden pb-4 space-y-2">
+                <div class="flex items-center gap-2 px-3 py-2 font-bold"><span class="logo-mark rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center"><i data-lucide="paw-print" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i></span><span>Dost Pet</span></div>
+                <button onclick="navigateTo('home');closeMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-i18n="home">Home</button>
+                <button onclick="navigateTo('adopt');closeMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-i18n="adopt">Adopt</button>
+                <button onclick="navigateTo('veterinary');closeMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-i18n="veterinary">Veterinary</button>
+                <button onclick="navigateTo('shelters');closeMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-i18n="shelters">Shelters</button>
+                <button onclick="navigateTo('petshops');closeMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-i18n="petshops">Pet Shops</button>
+                <button onclick="navigateTo('about');closeMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-i18n="about">About</button>
+                <button onclick="navigateTo('contact');closeMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-i18n="contact">Contact</button>
+                <hr class="border-gray-200 dark:border-gray-700">
+                <div class="flex gap-2 px-4">
+                    <button id="mobile-login-btn" onclick="navigateTo('login');closeMobileMenu()" class="flex-1 btn-secondary text-base py-2 text-center" data-i18n="login">Login</button>
+                    <button id="mobile-profile-btn" onclick="navigateTo('profile');closeMobileMenu()" class="hidden flex-1 btn-primary text-base py-2 text-center" data-i18n="profile">Profile</button>
+                    <button id="mobile-register-btn" onclick="openModal('register-modal')" class="flex-1 btn-primary text-base py-2 text-center" data-i18n="register">Register</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ==================== MAIN ==================== -->
+    <main class="min-h-screen">
+
+        <!-- HOME PAGE -->
+        <section id="page-home" class="page-section active">
+
+            <!-- Hero -->
+            <section class="relative overflow-hidden">
+                <div class="absolute inset-0 hero-gradient opacity-10 dark:opacity-20"></div>
+                <div class="absolute top-0 right-0 w-96 h-96 bg-primary-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+                <div class="absolute bottom-0 left-0 w-72 h-72 bg-pink-400/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28 relative">
+                    <div class="max-w-3xl mx-auto text-center">
+                        <div class="inline-flex items-center gap-2 glass-card px-4 py-2 rounded-full text-sm font-medium text-primary-600 dark:text-primary-400 mb-6">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            <span data-i18n="trusted">Trusted by 1,200+ shelters worldwide</span>
+                        </div>
+                        <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-tight mb-6">
+                            <span class="text-gradient">DOST PET  Heyvanlara qayğı, cəmiyyətə dəyər.</span>
+                        </h1>
+                        <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto" data-i18n="hero_subtitle">
+                            Dost Pet connects rescued animals with the people ready to love them — backed by verified shelters, real-time veterinary support, and a community that shows up.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button onclick="navigateTo('adopt')" class="btn-primary text-lg flex items-center gap-2 justify-center">
+                                <i data-lucide="search" class="w-5 h-5"></i> <span data-i18n="find_pet">Find a Pet</span>
+                            </button>
+                            <button onclick="navigateTo('petshops')" class="btn-secondary text-lg flex items-center gap-2 justify-center">
+                                <i data-lucide="store" class="w-5 h-5"></i> <span data-i18n="explore_petshops">Explore Pet Shops</span>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-8 text-sm">
+                            <div class="flex items-center gap-2 glass-card px-4 py-2 rounded-full text-gray-700 dark:text-gray-300">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                                <span data-i18n="benefit_trusted">Trusted Pet Shops</span>
+                            </div>
+                            <div class="flex items-center gap-2 glass-card px-4 py-2 rounded-full text-gray-700 dark:text-gray-300">
+                                <i data-lucide="truck" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                                <span data-i18n="benefit_delivery">Fast Delivery</span>
+                            </div>
+                            <div class="flex items-center gap-2 glass-card px-4 py-2 rounded-full text-gray-700 dark:text-gray-300">
+                                <i data-lucide="badge-check" class="w-4 h-4 text-primary-600 dark:text-primary-400"></i>
+                                <span data-i18n="benefit_quality">Quality Products</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats -->
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card p-6 text-center"><div class="text-3xl font-extrabold text-primary-600 dark:text-primary-400" data-count="12500">0</div><div class="text-sm text-gray-500 mt-1">Animals Rescued</div></div>
+                    <div class="glass-card p-6 text-center"><div class="text-3xl font-extrabold text-primary-600 dark:text-primary-400" data-count="8900">0</div><div class="text-sm text-gray-500 mt-1">Successful Adoptions</div></div>
+                    <div class="glass-card p-6 text-center"><div class="text-3xl font-extrabold text-primary-600 dark:text-primary-400" data-count="340">0</div><div class="text-sm text-gray-500 mt-1">Veterinary Partners</div></div>
+                    <div class="glass-card p-6 text-center"><div class="text-3xl font-extrabold text-primary-600 dark:text-primary-400" data-count="5200">0</div><div class="text-sm text-gray-500 mt-1">Active Volunteers</div></div>
+                </div>
+            </section>
+            <!-- Featured Pets -->
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold" data-i18n="featured">Featured Pets</h2>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="meet_friend">Meet your future best friend</p>
+                    </div>
+                    <div class="flex gap-2" id="pet-filters">
+                        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-primary-600 text-white" data-filter="all">All</button>
+                        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300" data-filter="dog">🐕 Dogs</button>
+                        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300" data-filter="cat">🐈 Cats</button>
+                        <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300" data-filter="other">🐹 Others</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="pets-grid"></div>
+            </section>
+
+            <!-- Pet Shops Preview -->
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold" data-i18n="petshops_home_title">Pet Shops</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2 max-w-2xl mx-auto" data-i18n="petshops_home_sub">Find food, accessories, toys, and grooming products for your pet from trusted stores.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="petshops-home-grid"></div>
+                <div class="text-center mt-10">
+                    <button onclick="navigateTo('petshops')" class="btn-primary inline-flex items-center gap-2">
+                        <i data-lucide="store" class="w-5 h-5"></i> <span data-i18n="view_all_petshops">See All Pet Shops</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- How It Works -->
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+                <h2 class="text-3xl font-bold text-center mb-12" data-i18n="how_works">How It Works</h2>
+                <p class="text-center text-gray-500 mb-8" data-i18n="how_sub">From first hello to forever home</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="glass-card p-6 text-center">
+                        <div class="w-14 h-14 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="user-plus" class="w-7 h-7 text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="font-semibold mb-2" data-i18n="step1_t">Create Account</h3>
+                        <p class="text-sm text-gray-500" data-i18n="step1_d">Set up a free profile in minutes and tell us what kind of companion you're looking for.</p>
+                    </div>
+                    <div class="glass-card p-6 text-center">
+                        <div class="w-14 h-14 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="camera" class="w-7 h-7 text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="font-semibold mb-2" data-i18n="step2_t">Post a Pet</h3>
+                        <p class="text-sm text-gray-500" data-i18n="step2_d">Shelters and individuals list pets with photos, health records, and personality notes.</p>
+                    </div>
+                    <div class="glass-card p-6 text-center">
+                        <div class="w-14 h-14 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="message-circle" class="w-7 h-7 text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="font-semibold mb-2" data-i18n="step3_t">Connect with Community</h3>
+                        <p class="text-sm text-gray-500" data-i18n="step3_d">Chat directly with shelters, foster volunteers, and vets to make an informed decision.</p>
+                    </div>
+                    <div class="glass-card p-6 text-center">
+                        <div class="w-14 h-14 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="heart" class="w-7 h-7 text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="font-semibold mb-2" data-i18n="step4_t">Find Your Friend</h3>
+                        <p class="text-sm text-gray-500" data-i18n="step4_d">Finalize adoption paperwork and welcome your new best friend home.</p>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <!-- ADOPT PAGE -->
+        <section id="page-adopt" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <h1 class="text-3xl font-bold mb-2">Find Your New Best Friend</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-8">Browse available pets from verified shelters across Azerbaijan.</p>
+                <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                    <div class="flex-1 relative">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="adopt-search" placeholder="Search by name, breed, or city..." class="w-full pl-12 pr-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:placeholder-gray-400" oninput="filterAdopt()">
+                    </div>
+                    <select id="adopt-species" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterAdopt()">
+                        <option value="all">All Types</option>
+                        <option value="dog">Dogs</option>
+                        <option value="cat">Cats</option>
+                        <option value="other">Others</option>
+                    </select>
+                    <select id="adopt-city" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterAdopt()">
+                        <option value="all">All Cities</option>
+                        <option value="Baku">Baku</option>
+                        <option value="Ganja">Ganja</option>
+                        <option value="Sumgait">Sumgait</option>
+                        <option value="Lankaran">Lankaran</option>
+                        <option value="Sheki">Sheki</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="adopt-grid"></div>
+                <p class="text-center mt-8 text-gray-500 hidden" id="no-adopt-msg" data-i18n="no_results">No pets match your search.</p>
+            </div>
+        </section>
+
+        <!-- VETERINARY PAGE -->
+        <section id="page-veterinary" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <h1 class="text-3xl font-bold mb-2" data-i18n="vet_title">Veterinary Clinics</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-8" data-i18n="vet_sub">Verified veterinary clinics across Azerbaijan — search by name or filter by city.</p>
+                <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                    <div class="flex-1 relative">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="vet-search" placeholder="Search clinics..." class="w-full pl-12 pr-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:placeholder-gray-400 dark:bg-gray-800/50" oninput="filterClinics()">
+                    </div>
+                    <select id="vet-city" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterClinics()">
+                        <option value="all">All Cities</option>
+                        <option value="Baku">Baku</option>
+                        <option value="Ganja">Ganja</option>
+                        <option value="Sumgait">Sumgait</option>
+                        <option value="Lankaran">Lankaran</option>
+                        <option value="Sabirabad">Sabirabad</option>
+                        <option value="Shamakhi">Shamakhi</option>
+                        <option value="Quba">Quba</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="clinics-grid"></div>
+                <p class="text-center mt-8 text-gray-500 hidden" id="no-clinics-msg" data-i18n="no_results">No clinics match your search.</p>
+
+                <!-- Map -->
+                <div class="mt-16">
+                    <h2 class="text-2xl font-bold mb-2" data-i18n="map_title">Interactive Map</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6" data-i18n="map_sub">Every clinic, across Azerbaijan — jump to a city or locate the nearest one.</p>
+
+                    <!-- Map Category & City Filters -->
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4" id="map-filters">
+                        <div class="flex flex-wrap gap-2" role="group" data-i18n-aria="map_filters_label" aria-label="Map category filters">
+                            <button class="map-filter-btn px-4 py-2 rounded-full text-sm font-medium bg-primary-600 text-white" data-map-filter="all" data-i18n="map_filter_all">Hamısı</button>
+                            <button class="map-filter-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300" data-map-filter="veterinary" data-i18n="map_filter_vet">Baytar klinikaları</button>
+                            <button class="map-filter-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300" data-map-filter="shelters" data-i18n="map_filter_shelters">Sığınacaqlar</button>
+                            <button class="map-filter-btn px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300" data-map-filter="petshops" data-i18n="map_filter_petshops">Pet shoplar</button>
+                        </div>
+                        <label for="map-city-filter" class="sr-only" data-i18n="ps_city_label">City</label>
+                        <select id="map-city-filter" data-i18n-aria="ps_city_label" aria-label="City" class="w-full sm:w-auto px-4 py-2 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="applyMapFilters()">
+                            <option value="all" data-i18n="ps_all_cities">All Cities</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mb-4">
+                        <span class="flex items-center gap-1 text-sm"><span class="w-3 h-3 rounded-full bg-green-500"></span> <span data-i18n="ps_open">Open</span></span>
+                        <span class="flex items-center gap-1 text-sm"><span class="w-3 h-3 rounded-full bg-red-500"></span> <span data-i18n="map_legend_emergency">Emergency</span></span>
+                        <span class="flex items-center gap-1 text-sm"><span class="w-3 h-3 rounded-full bg-gray-500"></span> <span data-i18n="ps_closed">Closed</span></span>
+                        <span class="flex items-center gap-1 text-sm"><span class="w-3 h-3 rounded-full bg-orange-500"></span> <span data-i18n="map_legend_shelter">Shelter</span></span>
+                        <span class="flex items-center gap-1 text-sm"><span class="w-3 h-3 rounded-full" style="background:#a855f7"></span> <span data-i18n="map_legend_petshop">Pet Shop</span></span>
+                    </div>
+                    <div class="glass-card p-2 relative">
+                        <div id="leaflet-map"></div>
+                        <p id="map-no-results-msg" class="hidden absolute inset-x-0 top-4 mx-auto w-fit px-4 py-2 rounded-full bg-white/90 dark:bg-gray-900/90 text-sm shadow z-[400]" data-i18n="no_results">No results found.</p>
+                    </div>
+                    <button onclick="locateUserOnMap()" class="mt-4 btn-secondary flex items-center gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i> Locate Me
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SHELTERS PAGE -->
+        <section id="page-shelters" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <h1 class="text-3xl font-bold mb-2" data-i18n="shelter_title">Animal Shelters</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-8" data-i18n="shelter_sub">Verified shelters across Azerbaijan.</p>
+                <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                    <div class="flex-1 relative">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="shelter-search" placeholder="Search shelters..." class="w-full pl-12 pr-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:placeholder-gray-400 dark:bg-gray-800/50" oninput="filterShelters()">
+                    </div>
+                    <select id="shelter-city" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterShelters()">
+                        <option value="all">All Cities</option>
+                        <option value="Baku">Baku</option>
+                        <option value="Ganja">Ganja</option>
+                        <option value="Sumgait">Sumgait</option>
+                        <option value="Lankaran">Lankaran</option>
+                        <option value="Shamakhi">Shamakhi</option>
+                        <option value="Nakhchivan">Nakhchivan</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="shelters-grid"></div>
+                <p class="text-center mt-8 text-gray-500 hidden" id="no-shelters-msg" data-i18n="no_results">No shelters match your search.</p>
+            </div>
+        </section>
+
+        <!-- PET SHOPS PAGE -->
+        <section id="page-petshops" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <h1 class="text-3xl font-bold mb-2" data-i18n="petshops_title">Azərbaycandakı Pet Shoplar</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-8" data-i18n="petshops_sub">Yaxınlıqdakı etibarlı mağazaları tapın və heyvanınız üçün lazım olan məhsulları kəşf edin.</p>
+
+                <!-- Search & Filters -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4 mb-6">
+                    <div class="flex-1 relative">
+                        <label for="petshop-search" class="sr-only" data-i18n="ps_search_label">Search by shop name, product or address</label>
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true"></i>
+                        <input type="search" id="petshop-search" data-i18n="ps_search_label" placeholder="Search by shop name, product or address..." class="w-full pl-12 pr-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:placeholder-gray-400 dark:bg-gray-800/50" oninput="filterPetShops()">
+                    </div>
+                    <select id="petshop-city" data-i18n-aria="ps_city_label" aria-label="City" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterPetShops()">
+                        <option value="all" data-i18n="ps_all_cities">All Cities</option>
+                    </select>
+                    <select id="petshop-category" aria-label="Product category" data-i18n-aria="ps_category_label" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="selectPetShopCategory(this.value)">
+                        <option value="all">All Categories</option>
+                    </select>
+                    <select id="petshop-delivery" data-i18n-aria="ps_delivery" aria-label="Delivery filter" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterPetShops()">
+                        <option value="all" data-i18n="ps_delivery_all">Delivery: Any</option>
+                        <option value="yes" data-i18n="ps_delivery_yes">Delivery Available</option>
+                    </select>
+                    <select id="petshop-open" data-i18n-aria="ps_open_now" aria-label="Open now filter" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterPetShops()">
+                        <option value="all" data-i18n="ps_open_all">Any Status</option>
+                        <option value="open" data-i18n="ps_open_now">Open Now</option>
+                    </select>
+                    <select id="petshop-sort" data-i18n-aria="ps_sort_rating" aria-label="Sort by rating" class="px-4 py-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50" onchange="filterPetShops()">
+                        <option value="default" data-i18n="ps_sort_default">Sort: Default</option>
+                        <option value="rating" data-i18n="ps_sort_rating">Sort: Highest Rated</option>
+                    </select>
+                </div>
+
+                <!-- Category Chips -->
+                <div class="flex flex-wrap gap-2 mb-8" id="petshop-category-chips" role="group" aria-label="Product categories"></div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="petshops-grid"></div>
+                <p class="text-center mt-8 text-gray-500 hidden" id="no-petshops-msg" data-i18n="no_results">No results found.</p>
+            </div>
+        </section>
+
+        <!-- ABOUT PAGE -->
+        <section id="page-about" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <h1 class="text-3xl sm:text-4xl font-bold mb-4" data-i18n="about_title">Dost Pet Haqqında</h1>
+                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-4xl" data-i18n="about_sub">Heyvanları, sahibləri, sığınacaqları, baytar klinikalarını və pet shopları bir platformada birləşdiririk.</p>
+                <div class="glass-card p-6 sm:p-8 mb-10 max-w-5xl">
+                    <p class="text-gray-700 dark:text-gray-300 leading-7 mb-4" data-i18n="about_desc1">Dost Pet Azərbaycanda heyvan sahibləri, könüllülər, sığınacaqlar, baytar klinikaları və pet shoplar arasında əlaqə yaradan rəqəmsal platformadır.</p>
+                    <p class="text-gray-700 dark:text-gray-300 leading-7" data-i18n="about_desc2">Məqsədimiz heyvanların təhlükəsizliyini, sağlamlığını və düzgün qayğı ilə təmin olunmasını asanlaşdırmaqdır. Platforma vasitəsilə istifadəçilər övladlığa heyvan götürə, baytar klinikası və pet shop tapa, heyvanlarının sağlamlıq məlumatlarını idarə edə və vacib tarixlər üçün xatırlatmalar ala bilərlər.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <article class="glass-card p-6"><i data-lucide="shield-check" class="w-8 h-8 text-primary-600 mb-4"></i><h2 class="font-bold mb-2" data-i18n="mission_safe_t">Heyvanların təhlükəsizliyi</h2><p class="text-sm text-gray-600 dark:text-gray-400" data-i18n="mission_safe_d">İtkin, tapılmış və övladlığa verilən heyvanlar haqqında məlumatların paylaşılması.</p></article>
+                    <article class="glass-card p-6"><i data-lucide="heart-pulse" class="w-8 h-8 text-primary-600 mb-4"></i><h2 class="font-bold mb-2" data-i18n="mission_health_t">Sağlamlıq nəzarəti</h2><p class="text-sm text-gray-600 dark:text-gray-400" data-i18n="mission_health_d">Peyvənd, müayinə və müalicə tarixlərinin izlənilməsi.</p></article>
+                    <article class="glass-card p-6"><i data-lucide="badge-check" class="w-8 h-8 text-primary-600 mb-4"></i><h2 class="font-bold mb-2" data-i18n="mission_services_t">Etibarlı xidmətlər</h2><p class="text-sm text-gray-600 dark:text-gray-400" data-i18n="mission_services_d">Yaxınlıqdakı baytar klinikalarının, sığınacaqların və pet shopların tapılması.</p></article>
+                    <article class="glass-card p-6"><i data-lucide="users" class="w-8 h-8 text-primary-600 mb-4"></i><h2 class="font-bold mb-2" data-i18n="mission_community_t">Güclü icma</h2><p class="text-sm text-gray-600 dark:text-gray-400" data-i18n="mission_community_d">Heyvansevərlərin, könüllülərin və xidmət təminatçılarının birləşdirilməsi.</p></article>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT PAGE -->
+        <section id="page-contact" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <h1 class="text-3xl font-bold mb-4" data-i18n="contact_title">Contact</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-12" data-i18n="contact_sub">We'd love to hear from you</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-primary-600"></i><span>hello@dostpet.com</span></div>
+                        <div class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-primary-600"></i><span>+994 12 345 67 89</span></div>
+                        <div class="flex items-center gap-3"><i data-lucide="map-pin" class="w-5 h-5 text-primary-600"></i><span>Narimanov, Baku, Azerbaijan</span></div>
+                    </div>
+                    <form class="space-y-4" onsubmit="return submitContactForm(event)">
+                        <input type="text" id="contact-name" required placeholder="Name" class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50">
+                        <input type="email" id="contact-email" required placeholder="Email" class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50">
+                        <textarea rows="4" id="contact-message" required placeholder="Message" class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50"></textarea>
+                        <button type="submit" class="btn-primary w-full">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- LOGIN PAGE -->
+        <section id="page-login" class="page-section">
+            <div class="min-h-[calc(100vh-4rem)] hero-gradient px-4 py-10 sm:py-16 flex items-center">
+                <div class="max-w-5xl mx-auto w-full glass rounded-[2rem] overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+                    <div class="hidden lg:flex p-12 bg-primary-900/40 text-white flex-col justify-between">
+                        <div class="flex items-center gap-3 text-2xl font-bold"><span class="logo-mark rounded-xl bg-white/15 flex items-center justify-center"><i data-lucide="paw-print" class="w-5 h-5 text-blue-200"></i></span>Dost Pet</div>
+                        <div><h2 class="text-4xl font-extrabold mb-4" data-i18n="login_welcome">Dostlarınıza daha yaxın olun.</h2><p class="text-blue-100" data-i18n="login_intro">Heyvanlarınızın sağlamlığını, peyvəndlərini və xatırlatmalarını bir yerdə idarə edin.</p></div>
+                    </div>
+                    <div class="p-6 sm:p-10 lg:p-12 bg-white/90 dark:bg-gray-950/90">
+                        <div class="flex lg:hidden items-center gap-2 font-bold text-xl mb-8"><span class="logo-mark rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center"><i data-lucide="paw-print" class="w-5 h-5 text-primary-600"></i></span>Dost Pet</div>
+                        <h1 class="text-2xl sm:text-3xl font-bold mb-2" data-i18n="login_title">Hesabınıza daxil olun</h1>
+                        <p class="text-sm text-gray-500 mb-7" data-i18n="frontend_demo">Bu yalnız frontend nümayişidir; real autentifikasiya yoxdur.</p>
+                        <form id="login-page-form" onsubmit="submitDemoLogin(event)" class="space-y-5">
+                            <div><label for="login-email" class="block text-sm font-semibold mb-2" data-i18n="email">E-poçt</label><input id="login-email" type="email" class="input-field" value="aytac@dostpet.az" autocomplete="email" required></div>
+                            <div><label for="login-password" class="block text-sm font-semibold mb-2" data-i18n="password">Şifrə</label><div class="relative"><input id="login-password" type="password" class="input-field pr-12" value="demo12345" autocomplete="current-password" required><button type="button" onclick="togglePassword()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Show password"><i id="password-eye" data-lucide="eye" class="w-5 h-5"></i></button></div></div>
+                            <div class="flex flex-wrap gap-3 items-center justify-between text-sm"><label class="flex items-center gap-2"><input id="remember-me" type="checkbox" class="w-4 h-4 accent-primary-600"><span data-i18n="remember_me">Məni yadda saxla</span></label><button type="button" class="text-primary-600 font-semibold" data-i18n="forgot_password">Şifrəni unutmusunuz?</button></div>
+                            <div id="login-message" class="hidden p-3 rounded-xl text-sm" role="status"></div>
+                            <button type="submit" class="btn-primary w-full" data-i18n="sign_in">Daxil ol</button>
+                            <button type="button" onclick="openModal('register-modal')" class="btn-secondary w-full" data-i18n="create_account">Hesab yarat</button>
+                            <button type="button" onclick="navigateTo('home')" class="w-full py-3 rounded-full font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 flex justify-center items-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i><span data-i18n="back_home">Əsas səhifəyə qayıt</span></button>
+                        </form>
+                        <div class="mt-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-sm"><p class="font-semibold mb-1" data-i18n="demo_credentials">Demo giriş məlumatları</p><p><span data-i18n="email">E-poçt</span>: aytac@dostpet.az</p><p><span data-i18n="password">Şifrə</span>: demo12345</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROFILE PAGE -->
+        <section id="page-profile" class="page-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-8">
+                <div class="glass-card p-6 sm:p-8"><div class="flex flex-col lg:flex-row lg:items-center gap-6"><div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-cyan-500 text-white flex items-center justify-center text-3xl font-bold shadow-lg">AA</div><div class="min-w-0 flex-1"><span class="inline-flex text-xs px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 mb-2" data-i18n="demo_profile">Demo profil məlumatları</span><h1 class="text-2xl sm:text-3xl font-bold">Aytac Abdulazadə</h1><p class="text-gray-500 mt-1">Bakı, Azərbaycan · <span data-i18n="pet_owner">Heyvan sahibi</span></p></div><div class="flex flex-wrap gap-2"><button class="btn-secondary text-sm !px-4" data-i18n="edit_profile">Profili redaktə et</button><button class="btn-secondary text-sm !px-4" data-i18n="settings">Parametrlər</button><button onclick="logout()" class="px-4 py-3 rounded-full font-semibold bg-red-50 dark:bg-red-950/30 text-red-600" data-i18n="logout">Çıxış</button></div></div></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5"><div class="glass-card p-5"><div class="text-2xl font-bold text-primary-600">2</div><div class="text-sm text-gray-500" data-i18n="sum_pets">heyvan</div></div><div class="glass-card p-5"><div class="text-2xl font-bold text-orange-500">1</div><div class="text-sm text-gray-500" data-i18n="sum_upcoming_vax">yaxınlaşan peyvənd</div></div><div class="glass-card p-5"><div class="text-2xl font-bold text-green-600">3</div><div class="text-sm text-gray-500" data-i18n="sum_completed_vax">tamamlanmış peyvənd</div></div><div class="glass-card p-5"><div class="text-2xl font-bold text-blue-600">1</div><div class="text-sm text-gray-500" data-i18n="sum_exam">yaxınlaşan baytar müayinəsi</div></div></div>
+                <section><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold" data-i18n="my_pets">Mənim heyvanlarım</h2><span class="text-xs text-gray-500" data-i18n="all_demo">Bütün məlumatlar demodur</span></div><div id="my-pets-grid" class="profile-grid"></div></section>
+                <section class="glass-card p-5 sm:p-7"><h2 class="text-2xl font-bold mb-5" data-i18n="vaccination_schedule">Peyvənd təqvimi</h2><div id="vaccination-list" class="space-y-3"></div></section>
+                <div class="profile-grid"><section class="glass-card p-5 sm:p-7"><h2 class="text-2xl font-bold mb-5" data-i18n="upcoming_events">Yaxınlaşan tədbirlər</h2><div id="events-timeline" class="space-y-4"></div></section><section class="glass-card p-5 sm:p-7"><div class="flex flex-wrap items-center justify-between gap-3 mb-5"><h2 class="text-2xl font-bold" data-i18n="reminders">Xatırlatmalar</h2><button onclick="openReminderModal()" class="btn-primary text-sm !px-4" data-i18n="add_reminder">Yeni xatırlatma əlavə et</button></div><div id="reminder-list" class="space-y-3 mb-6"></div><div class="border-t border-gray-200 dark:border-gray-700 pt-5"><p class="text-xs text-gray-500 mb-3" data-i18n="demo_preferences">Demo seçimlər — real bildiriş göndərilmir</p><div class="grid gap-3 text-sm"><label class="flex justify-between gap-3"><span data-i18n="in_app">Tətbiqdaxili bildiriş</span><input data-pref="inApp" onchange="saveReminderPreferences()" type="checkbox" class="pref-toggle w-5 h-5 accent-primary-600"></label><label class="flex justify-between gap-3"><span data-i18n="email_reminder">E-poçt xatırlatması</span><input data-pref="email" onchange="saveReminderPreferences()" type="checkbox" class="pref-toggle w-5 h-5 accent-primary-600"></label><label class="flex justify-between gap-3"><span data-i18n="sms_reminder">SMS xatırlatması</span><input data-pref="sms" onchange="saveReminderPreferences()" type="checkbox" class="pref-toggle w-5 h-5 accent-primary-600"></label><label class="flex flex-col gap-2"><span data-i18n="reminder_timing">Xatırlatma vaxtı</span><select id="preference-timing" onchange="saveReminderPreferences()" class="input-field"><option value="30">30</option><option value="14">14</option><option value="7">7</option><option value="1">1</option></select></label></div></div></section></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PET DETAILS MODAL -->
+    <div id="pet-details-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pet-details-title">
+        <div class="glass-card p-5 sm:p-8 w-full max-w-3xl mx-3 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()"><div class="flex justify-between gap-4 mb-5"><h2 id="pet-details-title" class="text-xl font-bold"></h2><button onclick="closeModal('pet-details-modal')" class="p-2 rounded-lg" aria-label="Close"><i data-lucide="x"></i></button></div><div id="pet-details-content"></div></div>
+    </div>
+
+    <!-- REMINDER MODAL -->
+    <div id="reminder-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="reminder-modal-title">
+        <div class="glass-card p-5 sm:p-8 w-full max-w-lg mx-3 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()"><div class="flex justify-between gap-4 mb-5"><h2 id="reminder-modal-title" class="text-xl font-bold" data-i18n="add_reminder">Yeni xatırlatma əlavə et</h2><button onclick="closeModal('reminder-modal')" class="p-2 rounded-lg" aria-label="Close"><i data-lucide="x"></i></button></div><form onsubmit="saveNewReminder(event)" class="space-y-4"><label class="block"><span class="text-sm font-semibold" data-i18n="select_pet">Heyvan seçin</span><select id="reminder-pet" class="input-field mt-2"><option>Luna</option><option>Max</option></select></label><label class="block"><span class="text-sm font-semibold" data-i18n="reminder_type">Xatırlatma növü</span><select id="reminder-type" class="input-field mt-2"><option value="vaccination" data-i18n="vaccination">Peyvənd</option><option value="exam" data-i18n="examination">Müayinə</option><option value="grooming" data-i18n="grooming">Baxım</option><option value="medication" data-i18n="medication">Dərman</option></select></label><label class="block"><span class="text-sm font-semibold" data-i18n="date">Tarix</span><input id="reminder-date" type="date" required class="input-field mt-2"></label><label class="block"><span class="text-sm font-semibold" data-i18n="reminder_timing">Xatırlatma vaxtı</span><select id="reminder-when" class="input-field mt-2"><option value="30">30</option><option value="14">14</option><option value="7">7</option><option value="1">1</option></select></label><label class="block"><span class="text-sm font-semibold" data-i18n="notes">Qeydlər</span><textarea id="reminder-notes" rows="3" class="input-field mt-2"></textarea></label><button type="submit" class="btn-primary w-full" data-i18n="save">Yadda saxla</button></form></div>
+    </div>
+
+    <div id="toast" class="toast hidden glass-card p-4" role="status" aria-live="polite"></div>
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="glass-card p-8 w-full max-w-md mx-4 animate-slide-up" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold">Login</h2>
+                <button onclick="closeModal('login-modal')" class="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Close"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="event.preventDefault();simulateLogin()" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input type="email" placeholder="your@email.com" required class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password</label>
+                    <input type="password" placeholder="••••••••" required class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50">
+                </div>
+                <button type="submit" class="btn-primary w-full">Sign In</button>
+            </form>
+            <p class="text-center text-sm mt-4 text-gray-500">Don't have an account? <button onclick="closeModal('login-modal');openModal('register-modal')" class="text-primary-600 font-semibold">Register</button></p>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div id="register-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="glass-card p-8 w-full max-w-md mx-4 animate-slide-up" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold">Create Account</h2>
+                <button onclick="closeModal('register-modal')" class="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Close"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="event.preventDefault();simulateRegister()" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Full Name</label>
+                    <input type="text" required placeholder="Your name" class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input type="email" required placeholder="your@email.com" class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password</label>
+                    <input type="password" required minlength="8" placeholder="Minimum 8 characters" class="w-full p-3 rounded-xl glass border-0 focus:ring-2 focus:ring-primary-500 outline-none dark:text-white dark:bg-gray-800/50">
+                </div>
+                <button type="submit" class="btn-primary w-full">Create Account</button>
+            </form>
+            <p class="text-center text-sm mt-4 text-gray-500">Already have an account? <button onclick="closeModal('register-modal');openModal('login-modal')" class="text-primary-600 font-medium">Login</button></p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50" role="contentinfo">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div>
+                    <button onclick="navigateTo('home')" class="flex items-center gap-2 text-xl font-bold mb-3"><span class="logo-mark rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center"><i data-lucide="paw-print" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i></span><span>Dost Pet</span></button>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">A premium platform connecting rescued animals with loving homes, verified shelters, and trusted vets.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-3">Quick Links</h3>
+                    <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                        <li><button onclick="navigateTo('adopt')" class="hover:text-primary-600">Find Pets</button></li>
+                        <li><button onclick="navigateTo('shelters')" class="hover:text-primary-600">Shelters</button></li>
+                        <li><button onclick="navigateTo('veterinary')" class="hover:text-primary-600">Veterinary</button></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-3">Resources</h3>
+                    <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                        <li><a href="#" class="hover:text-primary-600">Adoption Guide</a></li>
+                        <li><a href="#" class="hover:text-primary-600">Pet Care Blog</a></li>
+                        <li><a href="#" class="hover:text-primary-600">Volunteer</a></li>
+                        <li><a href="#" class="hover:text-primary-600">Help Center</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-3">Newsletter</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Monthly stories & new arrivals.</p>
+                    <form class="flex" onsubmit="return subscribeNewsletter(event)">
+                        <input type="email" id="newsletter-email" required placeholder="Email" class="flex-1 px-3 py-2 rounded-l-xl glass border-0 outline-none dark:text-white dark:bg-gray-800/50">
+                        <button type="submit" class="btn-primary rounded-l-none rounded-r-xl py-2 px-4">Join</button>
+                    </form>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500">
+                <p>© 2026 Dost Pet. All rights reserved.</p>
+                <div class="flex justify-center gap-4 mt-2">
+                    <a href="#" class="hover:text-primary-600">Privacy Policy</a>
+                    <a href="#" class="hover:text-primary-600">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== SCRIPTS ==================== -->
+    <script>
+        // ==================== DATA ====================
+        const pets = [
+            { id: 1, name: 'Max', species: 'dog', breed: 'Golden Retriever', age: '2 years', city: 'Baku', image: 'https://loremflickr.com/500/500/golden-retriever,dog?lock=101', badge: 'Friendly' },
+            { id: 2, name: 'Luna', species: 'cat', breed: 'Persian', age: '1 year', city: 'Ganja', image: 'https://loremflickr.com/500/500/persian-cat,cat?lock=102', badge: 'Calm' },
+            { id: 3, name: 'Rocky', species: 'dog', breed: 'German Shepherd Mix', age: '3 years', city: 'Sumgait', image: 'https://loremflickr.com/500/500/german-shepherd,dog?lock=103', badge: 'Good with kids' },
+            { id: 4, name: 'Mia', species: 'cat', breed: 'Scottish Fold', age: '6 months', city: 'Baku', image: 'https://loremflickr.com/500/500/scottish-fold,cat?lock=104', badge: 'Playful' },
+            { id: 5, name: 'Buddy', species: 'dog', breed: 'Labrador', age: '4 years', city: 'Baku', image: 'https://loremflickr.com/500/500/labrador,dog?lock=105', badge: 'Trained' },
+            { id: 6, name: 'Nala', species: 'cat', breed: 'British Shorthair', age: '8 months', city: 'Lankaran', image: 'https://loremflickr.com/500/500/british-shorthair,cat?lock=106', badge: 'Cuddly' },
+            { id: 7, name: 'Charlie', species: 'cat', breed: '', age: '1.5 years', city: 'Ganja', image: './jpg/kit2.jpeg', badge: 'Energetic' },
+            { id: 8, name: 'Oscar', species: 'other', breed: 'Rabbit', age: '6 months', city: 'Baku', image: 'https://loremflickr.com/500/500/rabbit,bunny?lock=108', badge: 'Gentle' }
+        ];
+
+        const clinics = [
+            { name: 'Baku Veterinary Hospital', city: 'Baku', address: '28 May Street 45, Baku', phone: '+994 12 498 76 54', emergency: true, lat: 40.3876, lng: 49.8625, open: true, verified: true },
+            { name: 'Ganja Animal Medical Center', city: 'Ganja', address: 'Ataturk Ave 12, Ganja', phone: '+994 22 255 67 23', emergency: false, lat: 40.6762, lng: 46.3606, open: true, verified: true },
+            { name: 'Sumgait Vet Clinic', city: 'Sumgait', address: 'Bulvar St 30, Sumgayit', phone: '+994 18 642 01 23', emergency: true, lat: 40.5889, lng: 49.6356, open: false, verified: true },
+            { name: 'Lankaran Pet Health Center', city: 'Lankaran', address: 'H. Aslanov St 8, Lankaran', phone: '+994 25 258 00 44', emergency: false, lat: 38.7575, lng: 48.8512, open: true, verified: true },
+            { name: 'Sabirabad Veterinary Center', city: 'Sabirabad', address: 'M. Akhundov St 22, Sabirabad', phone: '+994 21 235 12 88', emergency: false, lat: 40.0075, lng: 48.4722, open: true, verified: true },
+            { name: 'Shamakhi Animal Clinic', city: 'Shamakhi', address: 'Azerbaijan Ave 15, Shamakhi', phone: '+994 20 265 43 10', emergency: true, lat: 40.6322, lng: 48.6358, open: false, verified: true },
+            { name: 'Quba Pet Clinic', city: 'Quba', address: 'Heydar Aliyev Ave 33, Quba', phone: '+994 23 335 77 92', emergency: false, lat: 41.3611, lng: 48.5236, open: true, verified: true },
+            { name: 'Baku 24/7 Emergency Vets', city: 'Baku', address: 'Azadliq Sq 25/6, Baku', phone: '+994 12 510 88 03', emergency: true, lat: 40.4014, lng: 49.8643, open: true, verified: true },
+            // Verification is required before a veterinary clinic may create a map marker.
+            { id: 'hasvet-baku', name: 'Hasvet Baku International Animal Hospital', city: 'Baku', address: 'General Akim Abbasov küçəsi 78, Bakı 1130, Azərbaycan', phone: '+994 50 999 48 38', website: 'https://hasvetbakuanimalhospital.az', emergency: true, lat: 40.385601, lng: 49.810819, open: true, openingHours: '09:00–19:00; 24/7 təcili baytarlıq xidməti', verified: true }
+        ];
+
+        const shelters = [
+            { name: 'Baku Animal Rescue Center', city: 'Baku', address: 'Z. Bunyadov St 64, Baku', phone: '+994 12 432 10 98', capacity: 120, stock: 80, open: true, lat: 40.3900, lng: 49.8314 },
+            { name: 'Ganja Hope Shelter', city: 'Ganja', address: 'Narimanov Rd 14, Ganja', phone: '+994 22 233 45 78', capacity: 65, stock: 42, open: true, lat: 40.6832, lng: 46.3493 },
+            { name: 'Sumgait Stray Foster Home', city: 'Sumgait', address: 'Koroglu St 55, Sumgayit', phone: '+994 18 240 11 02', capacity: 48, stock: 36, open: false, lat: 40.5922, lng: 49.6629 },
+            { name: 'Lankaran Community Shelter', city: 'Lankaran', address: 'Gala St 77, Lankaran', phone: '+994 25 200 66 30', capacity: 40, stock: 25, open: true, lat: 38.7542, lng: 48.8518 },
+            { name: 'Shamakhi Animal Home', city: 'Shamakhi', address: 'Nizami St 19, Shamakhi', phone: '+994 20 267 44 21', capacity: 35, stock: 20, open: true, lat: 39.6296, lng: 48.6358 },
+            { name: 'Nakhchivan Rescue Shelter', city: 'Nakhchivan', address: 'Heydar Aliyev Ave 102, Nakhchivan', phone: '+994 36 544 14 10', capacity: 55, stock: 38, open: true, lat: 39.2102, lng: 45.4190 }
+        ];
+
+        // ==================== PET SHOPS DATA ====================
+        // Business details should be periodically rechecked against official shop pages and
+        // current public map listings. Each physical branch is intentionally a separate record.
+        // Coordinates were geocoded from the public branch addresses; fields that could not be
+        // verified are left null/empty and are hidden or labelled unavailable in the interface.
+        const petShops = [
+            {
+                id: 1,
+                name: 'Zoo28 (28 May filialı)',
+                city: 'Baku',
+                address: 'Şəmsi Bədəlbəyli küçəsi 86, Bakı',
+                phone: '+994 51 597 92 21',
+                website: 'https://zoo28.az',
+                rating: null,
+                reviewCount: null,
+                delivery: true,
+                hours: { start: '09:00', end: '23:00' },
+                openingHours: '09:00–23:00',
+                categories: ['dogFood', 'catFood', 'bird', 'aquarium', 'rodents', 'toys', 'accessories', 'hygiene', 'care'],
+                brands: ['Acana', 'Royal Canin', 'Purina', 'Trixie'],
+                lat: 40.3781690,
+                lng: 49.8458044
+            },
+            {
+                id: 2,
+                name: 'Zoo28 (İçərişəhər filialı)',
+                city: 'Baku',
+                address: 'Şeyx Şamil küçəsi 4, Bakı',
+                phone: '+994 51 547 92 21',
+                website: 'https://zoo28.az',
+                rating: null,
+                reviewCount: null,
+                delivery: true,
+                hours: { start: '09:00', end: '23:00' },
+                openingHours: '09:00–23:00',
+                categories: ['dogFood', 'catFood', 'bird', 'aquarium', 'rodents', 'toys', 'accessories', 'hygiene', 'care'],
+                brands: ['Acana', 'Royal Canin', 'Purina', 'Trixie'],
+                lat: 40.3665275,
+                lng: 49.8273572
+            },
+            {
+                id: 3,
+                name: 'BioPet Shop',
+                city: 'Baku',
+                address: 'Mehdi Mehdizadə küçəsi 29, Bakı',
+                phone: '+994 50 400 08 76',
+                website: 'https://biopet.az',
+                rating: 4.4,
+                reviewCount: 4,
+                delivery: true,
+                hours: { start: '10:00', end: '20:00' },
+                openingHours: '10:00–20:00',
+                categories: ['dogFood', 'catFood', 'bird', 'aquarium', 'rodents', 'toys', 'accessories', 'hygiene', 'care'],
+                brands: ['Royal Canin', 'Pro Plan', 'Monge', 'Acana', 'Orijen'],
+                lat: 40.3811135,
+                lng: 49.8664578
+            },
+            {
+                id: 4,
+                name: 'Xatiko Zooboutique',
+                city: 'Baku',
+                address: 'Ənvər Qasımzadə küçəsi 56A, Bakı',
+                phone: '+994 50 995 95 35',
+                website: '',
+                rating: 4.4,
+                reviewCount: 6,
+                delivery: null,
+                hours: null,
+                openingHours: '',
+                categories: ['dogFood', 'catFood', 'grooming'],
+                brands: [],
+                lat: 40.3912909,
+                lng: 49.8422398
+            }
+        ];
+
+        // ==================== STATE ====================
+        let currentPage = 'home';
+        let currentLang = 'az';
+        let isLoggedIn = false;
+        let map = null;
+        let activeMapCategory = 'all';
+        let activeMapCity = 'all';
+
+        // ==================== TRANSLATIONS ====================
+        const i18n = {
+            en: {
+                home: 'Home', adopt: 'Adopt', veterinary: 'Veterinary', shelters: 'Shelters',
+                about: 'About', contact: 'Contact', login: 'Login', register: 'Register',
+                find_pet: 'Find a Pet', report_missing: 'Report Missing Pet',
+                trusted: 'Trusted by 1,200+ shelters worldwide',
+                hero_title: 'Every Pet Deserves a Loving Home.',
+                hero_subtitle: 'Dost Pet connects rescued animals with the people ready to love them — backed by verified shelters, real-time veterinary support, and a community that shows up.',
+                featured: 'Featured Pets', meet_friend: 'Meet your future best friend',
+                how_works: 'How It Works', how_sub: 'From first hello to forever home',
+                step1_t: 'Create Account', step1_d: 'Set up a free profile in minutes and tell us what kind of companion you\'re looking for.',
+                step2_t: 'Post a Pet', step2_d: 'Shelters and individuals list pets with photos, health records, and personality notes.',
+                step3_t: 'Connect with Community', step3_d: 'Chat directly with shelters, foster volunteers, and vets to make an informed decision.',
+                step4_t: 'Find Your Friend', step4_d: 'Finalize adoption paperwork and welcome your new best friend home.',
+                vet_title: 'Veterinary Clinics', vet_sub: 'Verified veterinary clinics across Azerbaijan — search by name or filter by city.',
+                map_title: 'Interactive Map', map_sub: 'Explore veterinary clinics, shelters and pet shops across Azerbaijan.',
+                shelter_title: 'Animal Shelters', shelter_sub: 'Verified shelters near you',
+                about_title: 'About Dost Pet', about_sub: 'Built by rscuers, for resuers',
+                contact_title: 'Contact', contact_sub: 'We\'d love to hear from you',
+                no_results: 'No results found.',
+                petshops: 'Pet Shops',
+                explore_petshops: 'Explore Pet Shops',
+                benefit_trusted: 'Trusted Pet Shops',
+                benefit_delivery: 'Fast Delivery',
+                benefit_quality: 'Quality Products',
+                petshops_home_title: 'Pet Shops',
+                petshops_home_sub: 'Find food, accessories, toys and care products for your pet from trusted stores.',
+                view_all_petshops: 'See All Pet Shops',
+                petshops_title: 'Pet Shops in Azerbaijan',
+                petshops_sub: 'Find trusted stores near you and discover everything your pet needs.',
+                ps_search_label: 'Search by shop name, product or address',
+                ps_city_label: 'City',
+                ps_all_cities: 'All Cities',
+                ps_category_label: 'Product category',
+                ps_all_categories: 'All Categories',
+                ps_delivery_all: 'Delivery: Any',
+                ps_delivery_yes: 'Delivery Available',
+                ps_open_all: 'Any Status',
+                ps_open_now: 'Open Now',
+                ps_sort_default: 'Sort: Default',
+                ps_sort_rating: 'Sort: Highest Rated',
+                ps_open: 'Open', ps_closed: 'Closed',
+                ps_status_unknown: 'Hours unavailable',
+                ps_delivery: 'Delivery', ps_no_delivery: 'No Delivery', ps_delivery_unknown: 'Delivery unconfirmed',
+                ps_view_details: 'View Details',
+                ps_show_on_map: 'Show on Map',
+                ps_visit_website: 'Visit Website',
+                ps_call: 'Call',
+                ps_demo_rating: 'demo rating',
+                ps_reviews: 'reviews',
+                ps_rating_unavailable: 'Rating unavailable',
+                ps_brands: 'Brands',
+                map_filter_all: 'All', map_filter_vet: 'Veterinary Clinics',
+                map_filter_shelters: 'Shelters', map_filter_petshops: 'Pet Shops',
+                map_filters_label: 'Map category filters', map_legend_emergency: 'Emergency', map_legend_shelter: 'Shelter',
+                map_legend_petshop: 'Pet Shop',
+                map_no_results: 'No results found.',
+                cat_dogFood: 'Dog food', cat_catFood: 'Cat food', cat_bird: 'Bird products',
+                cat_aquarium: 'Aquarium', cat_rodents: 'Rodents', cat_toys: 'Toys',
+                cat_accessories: 'Accessories', cat_hygiene: 'Hygiene', cat_grooming: 'Grooming',
+                cat_care: 'Vitamins & care products'
+            },
+            az: {
+                home: 'Əsas Səhifə', adopt: 'Övladlığa Götür', veterinary: 'Baytar Klinikaları',
+                shelters: 'Sığınacaqlar', about: 'Haqqımızda', contact: 'Əlaqə',
+                login: 'Giriş', register: 'Qeydiyyat',
+                find_pet: 'Heyvan Tap', report_missing: 'İtkin Heyvan Bildir',
+                trusted: 'Dünya üzrə 1,200+ sığınacaq tərəfindən etibar edilir',
+                hero_title: 'Hər Bir Heyvan Sevgi Dolu Bir Evə Layiqdir.',
+                hero_subtitle: 'Dost Pet, xilas edilmiş heyvanları onları sevməyə hazır insanlarla birləşdirir — təsdiqlənmiş sığınacaqlar, real vaxtda baytar dəstəyi və həmrəylik göstərən bir icma ilə.',
+                featured: 'Ön Sıra Heyvanlar', meet_friend: 'Gələcək ən yaxın dostunuzla tanış olun',
+                how_works: 'Necə İşləyir', how_sub: 'İlk salamdan əbədi yuvaya',
+                step1_t: 'Hesab Yaradın', step1_d: 'Bir neçə dəqiqə ərzində pulsuz profil yaradın və hası növ yolda olmasını bizə deyin.',
+                step2_t: 'Heyvan Əlavə Et', step2_d: 'Sığınacaqlar vəyya fərdlər foto, sağlamlıq qeydləri ilə heyvanları siyahıya salırlar.',
+                step3_t: 'İcma İlə Birləşin', step3_d: 'Sığınacaqlar, könüllülər və baytarlarla birbaşa əlaqə saxlayın.',
+                step4_t: 'Dostunuzu Tapın', step4_d: 'Övladlığa götürmə sənədlərini tamamlayın ve yeni ən yaxşı dostunuzu qarşılayın.',
+                vet_title: 'Baytar Klinikaları', vet_sub: 'Azərbaycan üzrə təsdiqlənmiş baytar klinikaları — ada görə axtarın və ya şəhərə görə filtrləyin.',
+                map_title: 'İnteraktiv Xəritə', map_sub: 'Azərbaycan üzrə baytar klinikalarını, sığınacaqları və pet shopları kəşf edin.',
+                shelter_title: 'Heyvan Sığınacaqları', shelter_sub: 'Yaxınlıqdakı sığınacaqlar',
+                about_title: 'Dost Pet Haqqında', about_sub: 'Xilaskarlar tərəfindən, xilaskarlar üçün hazırlanmışdır',
+                contact_title: 'Əlaqə', contact_sub: 'Bizimlə əlaqə saxlamaqdan məmnun olarıq',
+                no_results: 'Nəticə tapılmadı.',
+                petshops: 'Pet Shoplar',
+                explore_petshops: 'Pet shopları kəşf et',
+                benefit_trusted: 'Etibarlı pet shoplar',
+                benefit_delivery: 'Sürətli çatdırılma',
+                benefit_quality: 'Keyfiyyətli məhsullar',
+                petshops_home_title: 'Pet Shops',
+                petshops_home_sub: 'Ev heyvanınız üçün yem, aksesuar, oyuncaq və qulluq məhsullarını etibarlı mağazalardan tapın.',
+                view_all_petshops: 'Bütün pet shoplara bax',
+                petshops_title: 'Azərbaycandakı Pet Shoplar',
+                petshops_sub: 'Yaxınlıqdakı etibarlı mağazaları tapın və heyvanınız üçün lazım olan məhsulları kəşf edin.',
+                ps_search_label: 'Mağaza adı, məhsul və ya ünvana görə axtar',
+                ps_city_label: 'Şəhər',
+                ps_all_cities: 'Bütün şəhərlər',
+                ps_category_label: 'Məhsul kateqoriyası',
+                ps_all_categories: 'Bütün kateqoriyalar',
+                ps_delivery_all: 'Çatdırılma: İstənilən',
+                ps_delivery_yes: 'Çatdırılma var',
+                ps_open_all: 'İstənilən status',
+                ps_open_now: 'Hazırda açıq',
+                ps_sort_default: 'Sırala: Standart',
+                ps_sort_rating: 'Sırala: Ən yüksək reytinq',
+                ps_open: 'Açıq', ps_closed: 'Bağlı',
+                ps_status_unknown: 'İş saatı mövcud deyil',
+                ps_delivery: 'Çatdırılma var', ps_no_delivery: 'Çatdırılma yoxdur', ps_delivery_unknown: 'Çatdırılma təsdiqlənməyib',
+                ps_view_details: 'Ətraflı bax',
+                ps_show_on_map: 'Xəritədə göstər',
+                ps_visit_website: 'Vebsayta keç',
+                ps_call: 'Zəng et',
+                ps_demo_rating: 'demo reytinq',
+                ps_reviews: 'rəy',
+                ps_rating_unavailable: 'Reytinq mövcud deyil',
+                ps_brands: 'Brendlər',
+                map_filter_all: 'Hamısı', map_filter_vet: 'Baytar klinikaları',
+                map_filter_shelters: 'Sığınacaqlar', map_filter_petshops: 'Pet shoplar',
+                map_filters_label: 'Xəritə kateqoriyası filtrləri', map_legend_emergency: 'Təcili yardım', map_legend_shelter: 'Sığınacaq',
+                map_legend_petshop: 'Pet Shop',
+                map_no_results: 'Nəticə tapılmadı.',
+                cat_dogFood: 'İt yemləri', cat_catFood: 'Pişik yemləri', cat_bird: 'Quş məhsulları',
+                cat_aquarium: 'Akvarium', cat_rodents: 'Gəmiricilər', cat_toys: 'Oyuncaqlar',
+                cat_accessories: 'Aksesuarlar', cat_hygiene: 'Gigiyena', cat_grooming: 'Grooming',
+                cat_care: 'Vitamin və qulluq məhsulları'
+            },
+            ru: {
+                home: 'Главная', adopt: 'Взять питомца', veterinary: 'Ветклиники',
+                shelters: 'Приюты', about: 'О нас', contact: 'Контакты',
+                login: 'Вход', register: 'Регистрация',
+                find_pet: 'Найти питомца', report_missing: 'Сообщить о пропаже',
+                trusted: 'Нам доверяют более 1,200 приютов по всему миру',
+                hero_title: 'Каждое Животное Заслуживает Любящий Дом.',
+                hero_subtitle: 'Dost Pet соединяет спасённых животных с людьми, готовыми их любить — с проверенными приютами, ветеринарной поддержкой в реальном времени и сообществом, которое не остаётся в стороне.',
+                featured: 'Особые Питомцы', meet_friend: 'Встречайте своего будущего друга',
+                how_works: 'Как Это Работает', how_sub: 'От первого привета до вечного дома',
+                step1_t: 'Создайте Аккаунт', step1_d: 'Создайте бесплатный профиль за минуты и расскажите, какого спутника вы ищете.',
+                step2_t: 'Разместите Питомца', step2_d: 'Приюты публикуют питомцев с фотографиями и медицинскими картами.',
+                step3_t: 'Общайтесь', step3_d: 'Общайтесь напрямую с приютами и волонтёрами.',
+                step4_t: 'Найдите Друга', step4_d: 'Оформите усыновление и встретьте нового лучшего друга.',
+                vet_title: 'Ветеринарные Клиники', vet_sub: 'Проверенные клиники по всему Азербайджану — ищите по названию или городу.',
+                map_title: 'Интерактивная Карта', map_sub: 'Ветклиники, приюты и зоомагазины по всему Азербайджану.',
+                shelter_title: 'Приюты', shelter_sub: 'Проверенные приюты рядом',
+                about_title: 'В Dost Pet', about_sub: 'Создано с помощью любви',
+                contact_title: 'Контакты', contact_sub: 'Мы рады вас слышать',
+                no_results: 'Ничего не найдено.',
+                petshops: 'Зоомагазины',
+                explore_petshops: 'Найти зоомагазины',
+                benefit_trusted: 'Проверенные зоомагазины',
+                benefit_delivery: 'Быстрая доставка',
+                benefit_quality: 'Качественные товары',
+                petshops_home_title: 'Зоомагазины',
+                petshops_home_sub: 'Найдите корм, аксессуары, игрушки и товары ухода для питомца в проверенных магазинах.',
+                view_all_petshops: 'Все зоомагазины',
+                petshops_title: 'Зоомагазины в Азербайджане',
+                petshops_sub: 'Найдите надёжные магазины рядом и всё необходимое для вашего питомца.',
+                ps_search_label: 'Поиск по названию, товару или адресу',
+                ps_city_label: 'Город',
+                ps_all_cities: 'Все города',
+                ps_category_label: 'Категория товаров',
+                ps_all_categories: 'Все категории',
+                ps_delivery_all: 'Доставка: Любая',
+                ps_delivery_yes: 'Есть доставка',
+                ps_open_all: 'Любой статус',
+                ps_open_now: 'Открыто сейчас',
+                ps_sort_default: 'Сортировка: По умолчанию',
+                ps_sort_rating: 'Сортировка: По рейтингу',
+                ps_open: 'Открыто', ps_closed: 'Закрыто',
+                ps_status_unknown: 'Часы работы не указаны',
+                ps_delivery: 'Есть доставка', ps_no_delivery: 'Без доставки', ps_delivery_unknown: 'Доставка не подтверждена',
+                ps_view_details: 'Подробнее',
+                ps_show_on_map: 'Показать на карте',
+                ps_visit_website: 'Перейти на сайт',
+                ps_call: 'Позвонить',
+                ps_demo_rating: 'демо-рейтинг',
+                ps_reviews: 'отзывов',
+                ps_rating_unavailable: 'Рейтинг не указан',
+                ps_brands: 'Бренды',
+                map_filter_all: 'Все', map_filter_vet: 'Ветклиники',
+                map_filter_shelters: 'Приюты', map_filter_petshops: 'Зоомагазины',
+                map_filters_label: 'Фильтры категорий карты', map_legend_emergency: 'Экстренная помощь', map_legend_shelter: 'Приют',
+                map_legend_petshop: 'Зоомагазин',
+                map_no_results: 'Ничего не найдено.',
+                cat_dogFood: 'Корм для собак', cat_catFood: 'Корм для кошек', cat_bird: 'Товары для птиц',
+                cat_aquarium: 'Аквариум', cat_rodents: 'Грызуны', cat_toys: 'Игрушки',
+                cat_accessories: 'Аксессуары', cat_hygiene: 'Гигиена', cat_grooming: 'Груминг',
+                cat_care: 'Витамины и уход'
+            }
+        };
+
+        Object.assign(i18n.az, {
+            profile:'Profil', about_title:'Dost Pet Haqqında', about_sub:'Heyvanları, sahibləri, sığınacaqları, baytar klinikalarını və pet shopları bir platformada birləşdiririk.',
+            about_desc1:'Dost Pet Azərbaycanda heyvan sahibləri, könüllülər, sığınacaqlar, baytar klinikaları və pet shoplar arasında əlaqə yaradan rəqəmsal platformadır.', about_desc2:'Məqsədimiz heyvanların təhlükəsizliyini, sağlamlığını və düzgün qayğı ilə təmin olunmasını asanlaşdırmaqdır. Platforma vasitəsilə istifadəçilər övladlığa heyvan götürə, baytar klinikası və pet shop tapa, heyvanlarının sağlamlıq məlumatlarını idarə edə və vacib tarixlər üçün xatırlatmalar ala bilərlər.',
+            mission_safe_t:'Heyvanların təhlükəsizliyi', mission_safe_d:'İtkin, tapılmış və övladlığa verilən heyvanlar haqqında məlumatların paylaşılması.', mission_health_t:'Sağlamlıq nəzarəti', mission_health_d:'Peyvənd, müayinə və müalicə tarixlərinin izlənilməsi.', mission_services_t:'Etibarlı xidmətlər', mission_services_d:'Yaxınlıqdakı baytar klinikalarının, sığınacaqların və pet shopların tapılması.', mission_community_t:'Güclü icma', mission_community_d:'Heyvansevərlərin, könüllülərin və xidmət təminatçılarının birləşdirilməsi.',
+            login_title:'Hesabınıza daxil olun', login_welcome:'Dostlarınıza daha yaxın olun.', login_intro:'Heyvanlarınızın sağlamlığını, peyvəndlərini və xatırlatmalarını bir yerdə idarə edin.', frontend_demo:'Bu yalnız frontend nümayişidir; real autentifikasiya yoxdur.', email:'E-poçt', password:'Şifrə', remember_me:'Məni yadda saxla', forgot_password:'Şifrəni unutmusunuz?', sign_in:'Daxil ol', create_account:'Hesab yarat', back_home:'Əsas səhifəyə qayıt', demo_credentials:'Demo giriş məlumatları', invalid_credentials:'Demo e-poçt və ya şifrə yanlışdır.', login_success:'Uğurla daxil oldunuz.', logout_success:'Hesabdan çıxış edildi.',
+            demo_profile:'Demo profil məlumatları', pet_owner:'Heyvan sahibi', edit_profile:'Profili redaktə et', settings:'Parametrlər', logout:'Çıxış', sum_pets:'heyvan', sum_upcoming_vax:'yaxınlaşan peyvənd', sum_completed_vax:'tamamlanmış peyvənd', sum_exam:'yaxınlaşan baytar müayinəsi', my_pets:'Mənim heyvanlarım', all_demo:'Bütün məlumatlar demodur', vaccination_schedule:'Peyvənd təqvimi', upcoming_events:'Yaxınlaşan tədbirlər', reminders:'Xatırlatmalar', add_reminder:'Yeni xatırlatma əlavə et', demo_preferences:'Demo seçimlər — real bildiriş göndərilmir', in_app:'Tətbiqdaxili bildiriş', email_reminder:'E-poçt xatırlatması', sms_reminder:'SMS xatırlatması', reminder_timing:'Xatırlatma vaxtı (gün əvvəl)',
+            select_pet:'Heyvan seçin', reminder_type:'Xatırlatma növü', vaccination:'Peyvənd', examination:'Müayinə', grooming:'Baxım', medication:'Dərman', date:'Tarix', notes:'Qeydlər', save:'Yadda saxla', saved:'Xatırlatma yadda saxlanıldı.', details:'Ətraflı məlumat', health_card:'Sağlamlıq kartı', vaccinations:'Peyvəndlər', edit:'Redaktə et', species:'Növ', breed:'Cins', age:'Yaş', gender:'Cinsiyyət', weight:'Çəki', microchip:'Mikroçip', veterinarian:'Əsas baytar', cat:'Pişik', dog:'İt', female:'Dişi', male:'Erkək', registered:'Qeydiyyatdan keçib', not_assigned:'Təyin edilməyib', unverified:'Təsdiqlənməyib',
+            blood_type:'Qan qrupu', allergies:'Allergiyalar', current_medications:'Cari dərmanlar', previous_conditions:'Əvvəlki xəstəliklər', sterilization:'Sterilizasiya', microchip_number:'Mikroçip nömrəsi', last_exam:'Son müayinə', next_exam:'Növbəti müayinə', vet_notes:'Baytar qeydləri', unknown:'Məlum deyil', none:'Yoxdur', yes:'Bəli', no_known_allergy:'Məlum allergiya yoxdur', chicken_allergy:'Toyuq tərkibli bəzi yemlər', healthy_note:'Ümumi vəziyyət qənaətbəxşdir.', demo_not_advice:'Demo məlumatdır, baytarlıq məsləhəti deyil.', completed:'Tamamlanıb', upcoming:'Yaxınlaşır', due_soon:'Tezliklə', overdue:'Gecikib', next_due:'Növbəti tarix', days_remaining:'gün qalıb', days_overdue:'gün gecikib', today:'bu gün', reminder_empty:'Əlavə xatırlatma yoxdur.'
+        });
+        Object.assign(i18n.en, {
+            profile:'Profile', about_title:'About Dost Pet', about_sub:'We bring pets, owners, shelters, veterinary clinics and pet shops together on one platform.', about_desc1:'Dost Pet is a digital platform connecting pet owners, volunteers, shelters, veterinary clinics and pet shops in Azerbaijan.', about_desc2:'Our goal is to make it easier to protect animals and support their health and proper care. Users can adopt pets, find clinics and pet shops, manage pet health information and receive reminders for important dates.', mission_safe_t:'Animal safety', mission_safe_d:'Sharing information about missing, found and adoptable animals.', mission_health_t:'Health tracking', mission_health_d:'Tracking vaccination, examination and treatment dates.', mission_services_t:'Trusted services', mission_services_d:'Finding nearby veterinary clinics, shelters and pet shops.', mission_community_t:'Strong community', mission_community_d:'Bringing animal lovers, volunteers and service providers together.',
+            login_title:'Sign in to your account', login_welcome:'Stay closer to your companions.', login_intro:'Manage your pets’ health, vaccinations and reminders in one place.', frontend_demo:'Frontend demonstration only; no real authentication is provided.', email:'Email', password:'Password', remember_me:'Remember me', forgot_password:'Forgot password?', sign_in:'Sign In', create_account:'Create Account', back_home:'Back to Home', demo_credentials:'Demo credentials', invalid_credentials:'The demo email or password is incorrect.', login_success:'Signed in successfully.', logout_success:'You have signed out.', demo_profile:'Demo profile data', pet_owner:'Pet owner', edit_profile:'Edit profile', settings:'Settings', logout:'Logout', sum_pets:'pets', sum_upcoming_vax:'upcoming vaccination', sum_completed_vax:'completed vaccinations', sum_exam:'upcoming veterinary examination', my_pets:'My Pets', all_demo:'All information is demo data', vaccination_schedule:'Vaccination Schedule', upcoming_events:'Upcoming Events', reminders:'Reminders', add_reminder:'Add Reminder', demo_preferences:'Demo preferences — no real notifications are sent', in_app:'In-app notification', email_reminder:'Email reminder', sms_reminder:'SMS reminder', reminder_timing:'Reminder timing (days before)', select_pet:'Select pet', reminder_type:'Reminder type', vaccination:'Vaccination', examination:'Examination', grooming:'Grooming', medication:'Medication', date:'Date', notes:'Notes', save:'Save', saved:'Reminder saved.', details:'Details', health_card:'Health Card', vaccinations:'Vaccinations', edit:'Edit', species:'Species', breed:'Breed', age:'Age', gender:'Gender', weight:'Weight', microchip:'Microchip', veterinarian:'Main veterinarian', cat:'Cat', dog:'Dog', female:'Female', male:'Male', registered:'Registered', not_assigned:'Not assigned', unverified:'Unverified', blood_type:'Blood type', allergies:'Allergies', current_medications:'Current medications', previous_conditions:'Previous conditions', sterilization:'Sterilization', microchip_number:'Microchip number', last_exam:'Last examination', next_exam:'Next examination', vet_notes:'Veterinarian notes', unknown:'Unknown', none:'None', yes:'Yes', no_known_allergy:'No known allergies', chicken_allergy:'Some chicken-based foods', healthy_note:'General condition is satisfactory.', demo_not_advice:'Demo data, not veterinary advice.', completed:'Completed', upcoming:'Upcoming', due_soon:'Due soon', overdue:'Overdue', next_due:'Next due', days_remaining:'days remaining', days_overdue:'days overdue', today:'today', reminder_empty:'No added reminders.'
+        });
+        Object.assign(i18n.ru, {
+            profile:'Профиль', about_title:'О Dost Pet', about_sub:'Мы объединяем животных, владельцев, приюты, ветеринарные клиники и зоомагазины на одной платформе.', about_desc1:'Dost Pet — цифровая платформа, объединяющая владельцев животных, волонтёров, приюты, ветеринарные клиники и зоомагазины Азербайджана.', about_desc2:'Наша цель — упростить защиту животных, заботу об их здоровье и правильный уход. Пользователи могут усыновлять животных, находить клиники и зоомагазины, вести сведения о здоровье и получать напоминания.', mission_safe_t:'Безопасность животных', mission_safe_d:'Обмен информацией о пропавших, найденных и доступных для усыновления животных.', mission_health_t:'Контроль здоровья', mission_health_d:'Отслеживание дат вакцинации, осмотров и лечения.', mission_services_t:'Надёжные услуги', mission_services_d:'Поиск ближайших ветеринарных клиник, приютов и зоомагазинов.', mission_community_t:'Сильное сообщество', mission_community_d:'Объединение любителей животных, волонтёров и поставщиков услуг.',
+            login_title:'Войдите в аккаунт', login_welcome:'Будьте ближе к своим питомцам.', login_intro:'Управляйте здоровьем, вакцинациями и напоминаниями в одном месте.', frontend_demo:'Только фронтенд-демонстрация; настоящей авторизации нет.', email:'Электронная почта', password:'Пароль', remember_me:'Запомнить меня', forgot_password:'Забыли пароль?', sign_in:'Войти', create_account:'Создать аккаунт', back_home:'Вернуться на главную', demo_credentials:'Демо-данные для входа', invalid_credentials:'Неверная демо-почта или пароль.', login_success:'Вход выполнен.', logout_success:'Вы вышли из аккаунта.', demo_profile:'Демо-данные профиля', pet_owner:'Владелец животного', edit_profile:'Редактировать профиль', settings:'Настройки', logout:'Выйти', sum_pets:'питомца', sum_upcoming_vax:'предстоящая вакцинация', sum_completed_vax:'завершённые вакцинации', sum_exam:'предстоящий осмотр', my_pets:'Мои питомцы', all_demo:'Все данные демонстрационные', vaccination_schedule:'График вакцинации', upcoming_events:'Предстоящие события', reminders:'Напоминания', add_reminder:'Добавить напоминание', demo_preferences:'Демо-настройки — реальные уведомления не отправляются', in_app:'Уведомление в приложении', email_reminder:'Напоминание по почте', sms_reminder:'SMS-напоминание', reminder_timing:'Срок напоминания (дней до)', select_pet:'Выберите питомца', reminder_type:'Тип напоминания', vaccination:'Вакцинация', examination:'Осмотр', grooming:'Груминг', medication:'Лекарство', date:'Дата', notes:'Заметки', save:'Сохранить', saved:'Напоминание сохранено.', details:'Подробнее', health_card:'Карта здоровья', vaccinations:'Вакцинации', edit:'Редактировать', species:'Вид', breed:'Порода', age:'Возраст', gender:'Пол', weight:'Вес', microchip:'Микрочип', veterinarian:'Основной ветеринар', cat:'Кошка', dog:'Собака', female:'Самка', male:'Самец', registered:'Зарегистрирован', not_assigned:'Не назначен', unverified:'Не подтверждено', blood_type:'Группа крови', allergies:'Аллергии', current_medications:'Текущие лекарства', previous_conditions:'Перенесённые заболевания', sterilization:'Стерилизация', microchip_number:'Номер микрочипа', last_exam:'Последний осмотр', next_exam:'Следующий осмотр', vet_notes:'Заметки ветеринара', unknown:'Неизвестно', none:'Нет', yes:'Да', no_known_allergy:'Известных аллергий нет', chicken_allergy:'Некоторые корма с курицей', healthy_note:'Общее состояние удовлетворительное.', demo_not_advice:'Демо-данные, не ветеринарная рекомендация.', completed:'Завершено', upcoming:'Предстоит', due_soon:'Скоро', overdue:'Просрочено', next_due:'Следующая дата', days_remaining:'дн. осталось', days_overdue:'дн. просрочено', today:'сегодня', reminder_empty:'Добавленных напоминаний нет.'
+        });
+
+        function t(key) {
+            return (i18n[currentLang] && i18n[currentLang][key]) ? i18n[currentLang][key] : (i18n['en'][key] || key);
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('dostpet_lang', lang);
+            applyTranslations();
+            updateLangButtons();
+            renderAll();
+            if (map) renderMapMarkers();
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.getAttribute('data-i18n');
+                const v = t(k);
+                if (['INPUT','TEXTAREA'].includes(el.tagName)) {
+                    el.placeholder = v;
+                } else if (el.children.length === 0) {
+                    el.textContent = v;
+                }
+            });
+            document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+                el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+            });
+        }
+
+        function updateLangButtons() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('bg-primary-600','text-white');
+                btn.classList.add('bg-gray-100','dark:bg-gray-700','text-gray-700','dark:text-gray-300');
+                if (btn.dataset.lang === currentLang) {
+                    btn.classList.remove('bg-gray-100','dark:bg-gray-700','text-gray-700','dark:text-gray-300');
+                    btn.classList.add('bg-primary-600','text-white');
+                }
+            });
+        }
+
+        // ==================== NAVIGATION ====================
+        function navigateTo(page) {
+            currentPage = page;
+            window.scrollTo(0, 0);
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            const tgt = document.getElementById('page-' + page);
+            if (tgt) tgt.classList.add('active');
+            else { document.getElementById('page-home').classList.add('active'); currentPage = 'home'; }
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('text-primary-600','dark:text-primary-400','font-bold'));
+            const al = document.querySelector(`.nav-link[data-page="${currentPage}"]`);
+            if (al) al.classList.add('text-primary-600','dark:text-primary-400','font-bold');
+            if (page === 'veterinary' && map) setTimeout(() => map.invalidateSize(), 300);
+            closeMobileMenu();
+            renderAll();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const btn = document.querySelector('[aria-label="Toggle mobile menu"]');
+            const isHidden = menu.classList.toggle('hidden');
+            btn?.setAttribute('aria-expanded', String(!isHidden));
+        }
+
+        function closeMobileMenu() {
+            document.getElementById('mobile-menu').classList.add('hidden');
+            document.querySelector('[aria-label="Toggle mobile menu"]')?.setAttribute('aria-expanded', 'false');
+        }
+
+        // ==================== DARK MODE ====================
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('dostpet_dark', isDark);
+            lucide.createIcons();
+        }
+
+        // ==================== MODALS ====================
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => closeModal(m.id));
+            }
+        });
+
+        const profilePets = [
+            { id:'luna', name:'Luna', icon:'cat', species:'cat', breed:'British Shorthair', age:{az:'2 yaş',en:'2 years',ru:'2 года'}, gender:'female', weight:'4.2 kq', vet:'Hasvet Baku International Animal Hospital', vetVerified:true, microchip:'AZ-CAT-2600715', blood:'A', allergies:'no_known_allergy', medications:'none', conditions:'none', sterilized:true, lastExam:'2026-07-15', nextExam:'2027-01-15' },
+            { id:'max', name:'Max', icon:'dog', species:'dog', breed:'Golden Retriever', age:{az:'4 yaş',en:'4 years',ru:'4 года'}, gender:'male', weight:'28 kq', vet:'', vetVerified:null, microchip:'AZ-DOG-2200831', blood:'DEA 1.1+', allergies:'chicken_allergy', medications:'none', conditions:'none', sterilized:true, lastExam:'2026-06-03', nextExam:'2026-12-03' }
+        ];
+        const vaccinationRecords = [
+            { pet:'Luna', vaccine:'Rabies', date:'2025-09-10', nextDue:'2026-09-10' },
+            { pet:'Luna', vaccine:'FVRCP', date:'2025-10-20', nextDue:'2026-10-20' },
+            { pet:'Max', vaccine:'Rabies', date:'2025-08-12', nextDue:'2026-08-12' },
+            { pet:'Max', vaccine:'DHPP', date:null, nextDue:'2026-08-18' }
+        ];
+        const profileEvents = [
+            { pet:'Max', type:'vaccination', title:'DHPP', date:'2026-08-18' },
+            { pet:'Luna', type:'grooming', title:null, date:'2026-09-02' },
+            { pet:'Luna', type:'vaccination', title:'Rabies', date:'2026-09-10' },
+            { pet:'Max', type:'examination', title:null, date:'2026-12-03' },
+            { pet:'Luna', type:'medication', title:null, date:'2027-01-05' }
+        ];
+
+        function localeCode() { return currentLang === 'az' ? 'az-AZ' : currentLang === 'ru' ? 'ru-RU' : 'en-GB'; }
+        function parseLocalDate(value) { const [y,m,d] = value.split('-').map(Number); return new Date(y,m-1,d); }
+        function formatDate(value) { return new Intl.DateTimeFormat(localeCode(), { day:'numeric', month:'long', year:'numeric' }).format(parseLocalDate(value)); }
+        function dayDifference(value) { const now = new Date(); now.setHours(0,0,0,0); return Math.ceil((parseLocalDate(value)-now)/86400000); }
+        function getVaccinationStatus(nextDueDate) {
+            const days = dayDifference(nextDueDate);
+            if (days < 0) return 'overdue';
+            if (days <= 30) return 'due-soon';
+            if (days <= 180) return 'upcoming';
+            return 'completed';
+        }
+        function statusMeta(status) {
+            return {
+                completed:{ label:t('completed'), color:'green', icon:'circle-check' }, upcoming:{ label:t('upcoming'), color:'blue', icon:'calendar-clock' },
+                'due-soon':{ label:t('due_soon'), color:'orange', icon:'clock-alert' }, overdue:{ label:t('overdue'), color:'red', icon:'triangle-alert' }
+            }[status];
+        }
+        function daysText(date) { const d=dayDifference(date); return d===0?t('today'):(d>0?`${d} ${t('days_remaining')}`:`${Math.abs(d)} ${t('days_overdue')}`); }
+
+        function renderProfilePets() {
+            const grid=document.getElementById('my-pets-grid'); if(!grid) return;
+            grid.innerHTML=profilePets.map(p=>`<article class="glass-card p-5 sm:p-6"><div class="flex gap-4 items-start"><div class="w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center"><i data-lucide="${p.icon}" class="w-8 h-8 text-primary-600"></i></div><div class="min-w-0"><h3 class="text-xl font-bold">${p.name}</h3><p class="text-gray-500">${t(p.species)} · ${p.breed}</p></div></div><dl class="grid grid-cols-2 gap-3 mt-5 text-sm"><div><dt class="text-gray-500">${t('age')}</dt><dd>${p.age[currentLang]}</dd></div><div><dt class="text-gray-500">${t('gender')}</dt><dd>${t(p.gender)}</dd></div><div><dt class="text-gray-500">${t('weight')}</dt><dd>${p.weight}</dd></div><div><dt class="text-gray-500">${t('microchip')}</dt><dd>${t('registered')}</dd></div><div class="col-span-2"><dt class="text-gray-500">${t('veterinarian')}</dt><dd>${p.vet||t('not_assigned')} ${p.vetVerified===false?`<span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">${t('unverified')}</span>`:''}</dd></div></dl><div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-5"><button onclick="openPetDetails('${p.id}','details')" class="px-3 py-2.5 rounded-xl bg-primary-600 text-white text-sm">${t('details')}</button><button onclick="openPetDetails('${p.id}','health')" class="px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-primary-600 text-sm">${t('health_card')}</button><button onclick="openPetDetails('${p.id}','vaccines')" class="px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-primary-600 text-sm">${t('vaccinations')}</button><button onclick="showToast('${t('all_demo').replaceAll("'","\\'")}')" class="px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm">${t('edit')}</button></div></article>`).join('');
+        }
+        function openPetDetails(id,mode) {
+            const p=profilePets.find(x=>x.id===id); if(!p)return;
+            document.getElementById('pet-details-title').textContent=`${p.name} · ${mode==='vaccines'?t('vaccinations'):mode==='health'?t('health_card'):t('details')}`;
+            const fields=[[t('blood_type'),p.blood||t('unknown')],[t('allergies'),t(p.allergies)],[t('current_medications'),t(p.medications)],[t('previous_conditions'),t(p.conditions)],[t('sterilization'),p.sterilized?t('yes'):t('none')],[t('microchip_number'),p.microchip],[t('last_exam'),formatDate(p.lastExam)],[t('next_exam'),formatDate(p.nextExam)],[t('vet_notes'),t('healthy_note')]];
+            const health=`<p class="text-xs text-amber-600 mb-4">${t('demo_not_advice')}</p><dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">${fields.map(f=>`<div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800"><dt class="text-xs text-gray-500">${f[0]}</dt><dd class="mt-1">${f[1]}</dd></div>`).join('')}</dl>`;
+            const vaccines=vaccinationRecords.filter(v=>v.pet===p.name).map(v=>vaccinationCard(v)).join('');
+            document.getElementById('pet-details-content').innerHTML=mode==='vaccines'?`<div class="space-y-3">${vaccines}</div>`:health;
+            openModal('pet-details-modal'); lucide.createIcons();
+        }
+        function vaccinationCard(v) {
+            const status=getVaccinationStatus(v.nextDue), meta=statusMeta(status), colors={green:'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300',blue:'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300',orange:'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300',red:'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300'};
+            return `<article class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center gap-3"><div class="flex-1"><div class="font-bold">${v.pet} · ${v.vaccine}</div><div class="text-sm text-gray-500 mt-1">${t('next_due')}: ${formatDate(v.nextDue)}</div></div><div class="sm:text-right"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${colors[meta.color]}"><i data-lucide="${meta.icon}" class="w-4 h-4"></i>${meta.label}</span><div class="text-xs mt-1 text-gray-500">${daysText(v.nextDue)}</div></div></article>`;
+        }
+        function renderVaccinations(){const el=document.getElementById('vaccination-list');if(el)el.innerHTML=vaccinationRecords.map(vaccinationCard).join('');}
+        function renderEvents(){const el=document.getElementById('events-timeline');if(!el)return;el.innerHTML=profileEvents.slice().sort((a,b)=>parseLocalDate(a.date)-parseLocalDate(b.date)).map(e=>{const d=dayDifference(e.date),status=d<0?'overdue':d<=30?'due-soon':'upcoming',m=statusMeta(status),dot={green:'#22c55e',blue:'#3b82f6',orange:'#f97316',red:'#ef4444'}[m.color];return `<div class="relative pl-7 pb-4 border-l-2 border-primary-200 dark:border-primary-900 last:pb-0"><span class="absolute -left-[7px] top-1 status-dot" style="background:${dot}"></span><div class="font-semibold">${e.pet} · ${e.title||t(e.type)}</div><div class="text-sm text-gray-500">${formatDate(e.date)} · ${m.label} · ${daysText(e.date)}</div></div>`}).join('');}
+
+        function getStoredReminders(){try{return JSON.parse(localStorage.getItem('dostpet_reminders')||'[]')}catch{return[]}}
+        function renderReminders(){const el=document.getElementById('reminder-list');if(!el)return;const defaults=[{pet:'Max',text:{az:'DHPP peyvəndi yaxınlaşır.',en:'DHPP vaccination is approaching.',ru:'Приближается вакцинация DHPP.'},date:'2026-08-18'},{pet:'Luna',text:{az:'Quduzluq peyvəndi yaxınlaşır.',en:'Rabies vaccination is approaching.',ru:'Приближается вакцинация от бешенства.'},date:'2026-09-10'},{pet:'Max',text:{az:'Növbəti ümumi müayinə.',en:'Next general examination.',ru:'Следующий общий осмотр.'},date:'2026-12-03'}];const all=[...defaults,...getStoredReminders()];el.innerHTML=all.length?all.sort((a,b)=>parseLocalDate(a.date)-parseLocalDate(b.date)).map(r=>`<div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800"><div class="font-semibold">${r.pet}</div><div class="text-sm">${r.text?.[currentLang]||r.notes||t(r.type)}</div><div class="text-xs text-gray-500 mt-1">${formatDate(r.date)} · ${daysText(r.date)}</div></div>`).join(''):`<p class="text-gray-500">${t('reminder_empty')}</p>`;}
+        function loadReminderPreferences(){let p={inApp:true,email:false,sms:false,timing:'14'};try{p={...p,...JSON.parse(localStorage.getItem('dostpet_reminder_preferences')||'{}')}}catch{}document.querySelectorAll('.pref-toggle').forEach(x=>x.checked=!!p[x.dataset.pref]);const s=document.getElementById('preference-timing');if(s)s.value=String(p.timing);}
+        function saveReminderPreferences(){const p={timing:document.getElementById('preference-timing')?.value||'14'};document.querySelectorAll('.pref-toggle').forEach(x=>p[x.dataset.pref]=x.checked);localStorage.setItem('dostpet_reminder_preferences',JSON.stringify(p));}
+        function openReminderModal(){const d=document.getElementById('reminder-date');if(d)d.min=new Date().toISOString().slice(0,10);openModal('reminder-modal');}
+        function saveNewReminder(e){e.preventDefault();const items=getStoredReminders();items.push({pet:document.getElementById('reminder-pet').value,type:document.getElementById('reminder-type').value,date:document.getElementById('reminder-date').value,when:document.getElementById('reminder-when').value,notes:document.getElementById('reminder-notes').value});localStorage.setItem('dostpet_reminders',JSON.stringify(items));e.target.reset();closeModal('reminder-modal');renderReminders();showToast(t('saved'));}
+
+        function showToast(message){const el=document.getElementById('toast');if(!el)return;el.textContent=message;el.classList.remove('hidden');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>el.classList.add('hidden'),3200);}
+        function updateAuthUI(){[['desktop-login-btn',!isLoggedIn],['mobile-login-btn',!isLoggedIn],['desktop-register-btn',!isLoggedIn],['mobile-register-btn',!isLoggedIn],['desktop-profile-btn',isLoggedIn],['mobile-profile-btn',isLoggedIn]].forEach(([id,show])=>document.getElementById(id)?.classList.toggle('hidden',!show));}
+        function togglePassword(){const input=document.getElementById('login-password');if(!input)return;input.type=input.type==='password'?'text':'password';document.getElementById('password-eye')?.setAttribute('data-lucide',input.type==='password'?'eye':'eye-off');lucide.createIcons();}
+        function submitDemoLogin(e){e.preventDefault();const email=document.getElementById('login-email').value.trim().toLowerCase(),password=document.getElementById('login-password').value,msg=document.getElementById('login-message');if(email!=='aytac@dostpet.az'||password!=='demo12345'){msg.textContent=t('invalid_credentials');msg.className='p-3 rounded-xl text-sm bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300';return;}isLoggedIn=true;if(document.getElementById('remember-me').checked)localStorage.setItem('dostpet_demo_auth','true');else localStorage.removeItem('dostpet_demo_auth');updateAuthUI();msg.classList.add('hidden');navigateTo('profile');showToast(t('login_success'));}
+        function logout(){isLoggedIn=false;localStorage.removeItem('dostpet_demo_auth');updateAuthUI();navigateTo('home');showToast(t('logout_success'));}
+        function simulateLogin(){closeModal('login-modal');navigateTo('login');}
+        function simulateRegister(){closeModal('register-modal');navigateTo('login');showToast(t('frontend_demo'));}
+
+        // ==================== FORMS ====================
+        function submitContactForm(e) {
+            e.preventDefault();
+            const form = e.target;
+            form.reset();
+            alert('Thanks! Your message has been sent. (UI Only)');
+            return false;
+        }
+
+        function subscribeNewsletter(e) {
+            e.preventDefault();
+            const form = e.target;
+            form.reset();
+            alert("You're subscribed! (UI Only)");
+            return false;
+        }
+
+        // ==================== PET RENDERING ====================
+        function petCardHTML(pet) {
+            return `
+                <div class="glass-card overflow-hidden" data-species="${pet.species}" data-city="${pet.city}">
+                    <img src="${pet.image}" alt="${pet.name}, a ${pet.breed}" class="pet-card-img w-full h-48 object-cover" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Crect fill=%27%23a855f7%27 width=%27300%27 height=%27300%27/%3E%3Ctext x=%27150%27 y=%27165%27 text-anchor=%27middle%27 fill=%27white%27 font-size=%2780%27%3E%F0%9F%90%BE%3C/text%3E%3C/svg%3E';">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-semibold">${pet.name}</h3>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">${pet.breed}</span>
+                        </div>
+                        <p class="text-sm text-gray-500">${pet.breed} · ${pet.age} · ${pet.city}</p>
+                        ${pet.badge ? '<span class="inline-block mt-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">'+pet.badge+'</span>' : ''}
+                    </div>
+                </div>`;
+        }
+
+        function renderPets(gridId, data) {
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+            grid.innerHTML = data.map(p => petCardHTML(p)).join('');
+        }
+
+        function filterAdopt() {
+            const grid = document.getElementById('adopt-grid');
+            if (!grid) return;
+            const q = (document.getElementById('adopt-search')?.value || '').toLowerCase();
+            const type = document.getElementById('adopt-species')?.value || 'all';
+            const city = document.getElementById('adopt-city')?.value || 'all';
+            let found = false;
+            grid.querySelectorAll('.glass-card').forEach(card => {
+                const m = (!q || card.textContent.toLowerCase().includes(q)) &&
+                    (type === 'all' || card.dataset.species === type) &&
+                    (city === 'all' || card.dataset.city === city);
+                card.style.display = m ? '' : 'none';
+                if (m) found = true;
+            });
+            document.getElementById('no-adopt-msg')?.classList.toggle('hidden', found);
+        }
+
+        function filterClinics() {
+            const q = (document.getElementById('vet-search')?.value || '').toLowerCase();
+            const city = document.getElementById('vet-city')?.value || 'all';
+            const grid = document.getElementById('clinics-grid');
+            if (!grid) return;
+            let found = 0;
+            let html = '';
+            clinics.forEach(c => {
+                const m = (!q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q)) &&
+                    (city === 'all' || c.city === city);
+                if (m) {
+                    found++;
+                    html += `<div class="glass-card p-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold">${c.name}</h3>
+                            <span class="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                                !c.verified ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                                c.emergency ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                                c.open ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
+                                'bg-gray-100 dark:bg-gray-700 text-gray-500'
+                            }">
+                                <span class="w-2 h-2 rounded-full ${
+                                    !c.verified ? 'bg-amber-500' : c.emergency ? 'bg-red-500' : c.open ? 'bg-green-500' : 'bg-gray-500'
+                                }"></span>${!c.verified ? t('unverified') : c.emergency ? 'Emergency' : c.open ? 'Open' : 'Closed'}
+                            </span>
+                        </div>
+                        ${c.address ? `<p class="text-sm text-gray-600 dark:text-gray-400">${c.address}</p>` : ''}
+                        ${c.phone ? `<p class="text-sm text-primary-600 dark:text-primary-400 mt-1">${c.phone}</p>` : ''}
+                    </div>`;
+                }
+            });
+            grid.innerHTML = html;
+            document.getElementById('no-clinics-msg')?.classList.toggle('hidden', found > 0);
+        }
+
+        function filterShelters() {
+            const q = document.getElementById('shelter-search')?.value.toLowerCase() || '';
+            const city = document.getElementById('shelter-city')?.value || 'all';
+            const grid = document.getElementById('shelters-grid');
+            if (!grid) return;
+            let found = 0;
+            let html = '';
+            shelters.forEach(s => {
+                const m = (!q || s.name.toLowerCase().includes(q) || s.city.toLowerCase().includes(q)) &&
+                    (city === 'all' || s.city === city);
+                if (m) {
+                    found++;
+                    html += `<div class="glass-card p-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold">${s.name}</h3>
+                            <span class="text-xs px-2 py-0.5 rounded-full ${s.open ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}">${s.open ? 'Open' : 'Full'}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${s.address}</p>
+                        <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+                            <span>📞 ${s.phone}</span>
+                            <span>🐾 ${s.stock}/${s.capacity}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+                            <div class="bg-primary-500 h-1.5 rounded-full" style="width:${(s.stock/s.capacity*100)}%"></div>
+                        </div>
+                    </div>`;
+                }
+            });
+            grid.innerHTML = html;
+            document.getElementById('no-shelters-msg')?.classList.toggle('hidden', found > 0);
+        }
+
+        // ==================== PET SHOPS ====================
+        // Basic HTML-escaping helper so dynamic shop data can never break out of markup.
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        const PET_SHOP_CATEGORIES = ['dogFood', 'catFood', 'bird', 'aquarium', 'rodents', 'toys', 'accessories', 'hygiene', 'grooming', 'care'];
+        let activePetShopCategory = 'all';
+
+        function categoryLabel(category) {
+            return t('cat_' + category);
+        }
+
+        function isShopOpen(shop) {
+            if (!shop.hours) return null;
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Baku', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+            }).formatToParts(new Date());
+            const hour = parts.find(p => p.type === 'hour')?.value || '00';
+            const minute = parts.find(p => p.type === 'minute')?.value || '00';
+            const now = Number(hour) * 60 + Number(minute);
+            const [startH, startM] = shop.hours.start.split(':').map(Number);
+            const [endH, endM] = shop.hours.end.split(':').map(Number);
+            return now >= startH * 60 + startM && now < endH * 60 + endM;
+        }
+
+        function populatePetShopFilters() {
+            // Cities generated from the pet-shop dataset rather than hardcoded.
+            const shopCities = [...new Set(petShops.map(s => s.city))].sort();
+            const mapCities = [...new Set([...clinics, ...shelters, ...petShops].map(s => s.city))].sort();
+            [['petshop-city', shopCities], ['map-city-filter', mapCities]].forEach(([id, cities]) => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const current = sel.value;
+                sel.innerHTML = `<option value="all">${escapeHTML(t('ps_all_cities'))}</option>` +
+                    cities.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+                if ([...sel.options].some(o => o.value === current)) sel.value = current;
+            });
+
+            const categorySelect = document.getElementById('petshop-category');
+            if (categorySelect) {
+                categorySelect.innerHTML = `<option value="all">${escapeHTML(t('ps_all_categories'))}</option>` +
+                    PET_SHOP_CATEGORIES.map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(categoryLabel(cat))}</option>`).join('');
+                categorySelect.value = activePetShopCategory;
+            }
+
+            const chipsEl = document.getElementById('petshop-category-chips');
+            if (chipsEl) {
+                chipsEl.setAttribute('aria-label', t('ps_category_label'));
+                chipsEl.innerHTML = `<button class="ps-cat-chip px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${activePetShopCategory === 'all' ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}" data-cat="all">${escapeHTML(t('map_filter_all'))}</button>` +
+                    PET_SHOP_CATEGORIES.map(cat => `<button class="ps-cat-chip px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${activePetShopCategory === cat ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}" data-cat="${escapeHTML(cat)}">${escapeHTML(categoryLabel(cat))}</button>`).join('');
+            }
+        }
+
+        function selectPetShopCategory(category) {
+            activePetShopCategory = category;
+            populatePetShopFilters();
+            filterPetShops();
+        }
+
+        document.addEventListener('click', (e) => {
+            const chip = e.target.closest('.ps-cat-chip');
+            if (chip) {
+                selectPetShopCategory(chip.dataset.cat);
+            }
+        });
+
+        function petShopRatingHTML(shop) {
+            if (shop.rating === null || shop.rating === undefined) {
+                return `<span class="text-xs text-gray-500">${escapeHTML(t('ps_rating_unavailable'))}</span>`;
+            }
+            const reviews = shop.reviewCount !== null && shop.reviewCount !== undefined ? ` · ${shop.reviewCount} ${escapeHTML(t('ps_reviews'))}` : '';
+            return `<span class="flex items-center gap-1 text-sm text-amber-500"><i data-lucide="star" class="w-4 h-4 fill-current"></i>${shop.rating}${reviews}</span>`;
+        }
+
+        function petShopCardHTML(shop, variant) {
+            const openNow = isShopOpen(shop);
+            const statusLabel = openNow === null ? t('ps_status_unknown') : (openNow ? t('ps_open') : t('ps_closed'));
+            const statusBadge = `<span class="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${openNow === true ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}">
+                <span class="w-2 h-2 rounded-full ${openNow === true ? 'bg-green-500' : 'bg-gray-500'}"></span>${escapeHTML(statusLabel)}
+            </span>`;
+            const deliveryLabel = shop.delivery === null ? t('ps_delivery_unknown') : (shop.delivery ? t('ps_delivery') : t('ps_no_delivery'));
+            const deliveryBadge = `<span class="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${shop.delivery === true ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}">
+                <i data-lucide="truck" class="w-3 h-3"></i>${escapeHTML(deliveryLabel)}
+            </span>`;
+            const categoryBadges = (shop.categories || []).slice(0, variant === 'home' ? 3 : shop.categories.length)
+                .map(c => `<span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">${escapeHTML(categoryLabel(c))}</span>`).join(' ');
+            const brandsLine = (shop.brands && shop.brands.length) ? `<p class="text-xs text-gray-500 mt-2"><span class="font-medium">${escapeHTML(t('ps_brands'))}:</span> ${escapeHTML(shop.brands.join(', '))}</p>` : '';
+            const websiteBtn = shop.website ? `<a href="${escapeHTML(shop.website)}" target="_blank" rel="noopener noreferrer" class="btn-secondary text-xs !py-2 !px-3 flex items-center gap-1"><i data-lucide="external-link" class="w-3 h-3"></i>${escapeHTML(t('ps_visit_website'))}</a>` : '';
+            const callBtn = shop.phone ? `<a href="tel:${escapeHTML(shop.phone.replace(/\s+/g, ''))}" class="btn-secondary text-xs !py-2 !px-3 flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3"></i>${escapeHTML(t('ps_call'))}</a>` : '';
+            const phoneLine = shop.phone ? `<p class="text-sm text-primary-600 dark:text-primary-400 mt-1">${escapeHTML(shop.phone)}</p>` : '';
+
+            if (variant === 'home') {
+                return `
+                <div class="glass-card overflow-hidden flex flex-col">
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="store" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold leading-tight">${escapeHTML(shop.name)}</h3>
+                                    <p class="text-xs text-gray-500">${escapeHTML(shop.city)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        ${petShopRatingHTML(shop) ? `<div class="mb-2">${petShopRatingHTML(shop)}</div>` : ''}
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">${escapeHTML(shop.address)}</p>
+                        <div class="flex flex-wrap gap-1.5 mb-3">${categoryBadges}</div>
+                        <div class="flex flex-wrap gap-1.5 mb-4">${statusBadge}${deliveryBadge}</div>
+                        <div class="mt-auto flex flex-wrap gap-2">
+                            <button onclick="navigateTo('petshops')" class="btn-primary text-xs !py-2 !px-3 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i>${escapeHTML(t('ps_view_details'))}</button>
+                            <button onclick="showPetShopOnMap(${shop.id})" class="btn-secondary text-xs !py-2 !px-3 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i>${escapeHTML(t('ps_show_on_map'))}</button>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            return `
+                <div class="glass-card overflow-hidden flex flex-col" data-shop-id="${shop.id}" data-city="${escapeHTML(shop.city)}">
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                                    <i data-lucide="store" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold leading-tight">${escapeHTML(shop.name)}</h3>
+                                    ${petShopRatingHTML(shop)}
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${escapeHTML(shop.city)} · ${escapeHTML(shop.address)}</p>
+                        ${phoneLine}
+                        ${shop.openingHours ? `<p class="text-xs text-gray-500 mt-1">${escapeHTML(shop.openingHours)}</p>` : ''}
+                        <div class="flex flex-wrap gap-1.5 mt-3">${categoryBadges}</div>
+                        ${brandsLine}
+                        <div class="flex flex-wrap gap-1.5 mt-3 mb-4">${statusBadge}${deliveryBadge}</div>
+                        <div class="mt-auto flex flex-wrap gap-2">
+                            ${callBtn}
+                            ${websiteBtn}
+                            <button onclick="showPetShopOnMap(${shop.id})" class="btn-secondary text-xs !py-2 !px-3 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i>${escapeHTML(t('ps_show_on_map'))}</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderPetShopsHome() {
+            const grid = document.getElementById('petshops-home-grid');
+            if (!grid) return;
+            grid.innerHTML = petShops.slice(0, 4).map(s => petShopCardHTML(s, 'home')).join('');
+            lucide.createIcons();
+        }
+
+        function filterPetShops() {
+            populatePetShopFilters();
+            const grid = document.getElementById('petshops-grid');
+            if (!grid) return;
+            const q = (document.getElementById('petshop-search')?.value || '').toLowerCase();
+            const city = document.getElementById('petshop-city')?.value || 'all';
+            const deliveryFilter = document.getElementById('petshop-delivery')?.value || 'all';
+            const openFilter = document.getElementById('petshop-open')?.value || 'all';
+            const sortBy = document.getElementById('petshop-sort')?.value || 'default';
+
+            let results = petShops.filter(s => {
+                const matchesQuery = !q ||
+                    s.name.toLowerCase().includes(q) ||
+                    s.address.toLowerCase().includes(q) ||
+                    (s.categories || []).some(c => categoryLabel(c).toLowerCase().includes(q)) ||
+                    (s.brands || []).some(b => b.toLowerCase().includes(q));
+                const matchesCity = city === 'all' || s.city === city;
+                const matchesDelivery = deliveryFilter === 'all' || (deliveryFilter === 'yes' && s.delivery);
+                const matchesOpen = openFilter === 'all' || (openFilter === 'open' && isShopOpen(s) === true);
+                const matchesCategory = activePetShopCategory === 'all' || (s.categories || []).includes(activePetShopCategory);
+                return matchesQuery && matchesCity && matchesDelivery && matchesOpen && matchesCategory;
+            });
+
+            if (sortBy === 'rating') {
+                results = results.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            }
+
+            grid.innerHTML = results.map(s => petShopCardHTML(s, 'page')).join('');
+            document.getElementById('no-petshops-msg')?.classList.toggle('hidden', results.length > 0);
+            lucide.createIcons();
+        }
+
+        // ==================== MAP ====================
+        // Marker references kept by category so filtering can show/hide layers
+        // without ever destroying and recreating the map itself.
+        const mapMarkers = {
+            veterinary: [],
+            shelters: [],
+            petshops: []
+        };
+        let userLocationMarker = null;
+
+        function dotIcon(color, size) {
+            size = size || 12;
+            return L.divIcon({
+                html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(0,0,0,0.3);"></div>`,
+                className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2]
+            });
+        }
+
+        function createMapMarker(category, data, color, popupHTML) {
+            if (!map || !data.lat || !data.lng) return null;
+            const marker = L.marker([data.lat, data.lng], { icon: dotIcon(color) });
+            marker.bindPopup(popupHTML);
+            marker._category = category;
+            marker._city = data.city;
+            return marker;
+        }
+
+        function petShopPopupHTML(shop) {
+            const websiteBtn = shop.website ? `<br><a href="${escapeHTML(shop.website)}" target="_blank" rel="noopener noreferrer" style="color:#7c3aed;font-weight:600;">${escapeHTML(t('ps_visit_website'))}</a>` : '';
+            const openNow = isShopOpen(shop);
+            const status = openNow === null ? t('ps_status_unknown') : (openNow ? t('ps_open') : t('ps_closed'));
+            const delivery = shop.delivery === null ? t('ps_delivery_unknown') : (shop.delivery ? t('ps_delivery') : t('ps_no_delivery'));
+            const categories = (shop.categories || []).map(c => escapeHTML(categoryLabel(c))).join(', ');
+            return `<strong>${escapeHTML(shop.name)}</strong><br>${escapeHTML(shop.address)}${shop.phone ? '<br>📞 ' + escapeHTML(shop.phone) : ''}<br><em>${escapeHTML(status)} · ${escapeHTML(delivery)}</em><br>${categories}${websiteBtn}<br><button onclick="navigateTo('petshops')" style="margin-top:6px;color:#2563eb;font-weight:600;background:none;border:none;padding:0;cursor:pointer;">${escapeHTML(t('ps_view_details'))}</button>`;
+        }
+
+        function renderMapMarkers() {
+            if (!map) return;
+            // Clear any existing markers/layers before re-rendering (avoids duplicates).
+            Object.values(mapMarkers).forEach(arr => {
+                arr.forEach(m => map.removeLayer(m));
+                arr.length = 0;
+            });
+
+            clinics.forEach(c => {
+                if (!(c.verified === true && Number.isFinite(c.lat) && Number.isFinite(c.lng))) return;
+                const color = c.emergency ? '#ef4444' : (c.open ? '#22c55e' : '#6b7280');
+                const popup = `<strong>${escapeHTML(c.name)}</strong><br>${escapeHTML(c.address)}<br>${escapeHTML(c.phone)}<br><em>${c.emergency ? '🚨 Emergency' : c.open ? '✅ Open' : '🔒 Closed'}</em>`;
+                const marker = createMapMarker('veterinary', c, color, popup);
+                if (marker) mapMarkers.veterinary.push(marker);
+            });
+
+            shelters.forEach(s => {
+                const popup = `<strong>${escapeHTML(s.name)}</strong><br>${escapeHTML(s.address)}<br>📞 ${escapeHTML(s.phone)}<br>🐾 Capacity: ${s.stock}/${s.capacity}`;
+                const marker = createMapMarker('shelters', s, '#f59e0b', popup);
+                if (marker) mapMarkers.shelters.push(marker);
+            });
+
+            petShops.forEach(p => {
+                const marker = createMapMarker('petshops', p, '#a855f7', petShopPopupHTML(p));
+                if (marker) mapMarkers.petshops.push(marker);
+            });
+
+            filterMapMarkers();
+        }
+
+        function filterMapMarkers() {
+            if (!map) return;
+            let visibleCount = 0;
+            Object.keys(mapMarkers).forEach(category => {
+                mapMarkers[category].forEach(marker => {
+                    const matchesCategory = activeMapCategory === 'all' || activeMapCategory === category;
+                    const matchesCity = activeMapCity === 'all' || marker._city === activeMapCity;
+                    const shouldShow = matchesCategory && matchesCity;
+                    const isOnMap = map.hasLayer(marker);
+                    if (shouldShow && !isOnMap) marker.addTo(map);
+                    if (!shouldShow && isOnMap) map.removeLayer(marker);
+                    if (shouldShow) visibleCount++;
+                });
+            });
+            document.getElementById('map-no-results-msg')?.classList.toggle('hidden', visibleCount > 0);
+            fitVisibleMarkers();
+        }
+
+        function fitVisibleMarkers() {
+            if (!map) return;
+            const visible = [];
+            Object.values(mapMarkers).forEach(arr => arr.forEach(m => { if (map.hasLayer(m)) visible.push(m); }));
+            if (visible.length === 0) return;
+            const bounds = L.latLngBounds(visible.map(m => m.getLatLng()));
+            map.fitBounds(bounds.pad(0.2), { maxZoom: 14 });
+        }
+
+        function applyMapFilters() {
+            activeMapCity = document.getElementById('map-city-filter')?.value || 'all';
+            filterMapMarkers();
+        }
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.map-filter-btn');
+            if (btn) {
+                document.querySelectorAll('.map-filter-btn').forEach(b => {
+                    b.classList.remove('bg-primary-600', 'text-white');
+                    b.classList.add('bg-gray-100', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+                });
+                btn.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+                btn.classList.add('bg-primary-600', 'text-white');
+                activeMapCategory = btn.dataset.mapFilter;
+                filterMapMarkers();
+            }
+        });
+
+        function focusMapLocation(lat, lng, marker) {
+            if (!map) return;
+            map.setView([lat, lng], 15);
+            if (marker) setTimeout(() => marker.openPopup(), 300);
+        }
+
+        // Called from "Xəritədə göstər" buttons on pet-shop cards.
+        function showPetShopOnMap(shopId) {
+            const shop = petShops.find(p => p.id === shopId);
+            if (!shop) return;
+            navigateTo('veterinary');
+            activeMapCategory = 'petshops';
+            activeMapCity = shop.city;
+            document.querySelectorAll('.map-filter-btn').forEach(b => {
+                b.classList.remove('bg-primary-600', 'text-white');
+                b.classList.add('bg-gray-100', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+            });
+            document.querySelector('.map-filter-btn[data-map-filter="petshops"]')?.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+            document.querySelector('.map-filter-btn[data-map-filter="petshops"]')?.classList.add('bg-primary-600', 'text-white');
+            setTimeout(() => {
+                if (!map) return;
+                const cityFilterEl = document.getElementById('map-city-filter');
+                if (cityFilterEl) cityFilterEl.value = shop.city;
+                filterMapMarkers();
+                const marker = mapMarkers.petshops.find(m => m.getLatLng().lat === shop.lat && m.getLatLng().lng === shop.lng);
+                if (marker) focusMapLocation(shop.lat, shop.lng, marker);
+            }, 400);
+        }
+
+        function initMap() {
+            if (typeof L === 'undefined') return;
+            const el = document.getElementById('leaflet-map');
+            if (!el) return;
+            if (map) { map.remove(); map = null; }
+            map = L.map('leaflet-map').setView([40.4093, 49.8671], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 18
+            }).addTo(map);
+
+            renderMapMarkers();
+            setTimeout(() => map.invalidateSize(), 200);
+        }
+
+        function locateUserOnMap() {
+            if (!navigator.geolocation) {
+                alert('Geolocation not supported by your browser.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const { latitude, longitude } = pos.coords;
+                if (!map) return;
+                map.setView([latitude, longitude], 13);
+                if (userLocationMarker) map.removeLayer(userLocationMarker);
+                userLocationMarker = L.marker([latitude, longitude], { icon: dotIcon('#6366f1', 16) })
+                    .addTo(map).bindPopup('📍 Your Location');
+            }, () => alert('Geolocation denied or unavailable.'));
+        }
+
+        // ==================== COUNTERS ====================
+        let countersAnimated = false;
+
+        function animateCounters() {
+            if (countersAnimated) return;
+            countersAnimated = true;
+            document.querySelectorAll('[data-count]').forEach(el => {
+                const target = parseInt(el.getAttribute('data-count'));
+                if (isNaN(target)) return;
+                const duration = 2000;
+                const start = performance.now();
+                function tick(now) {
+                    const elapsed = now - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    el.textContent = Math.floor(target * progress).toLocaleString();
+                    if (progress < 1) requestAnimationFrame(tick);
+                    else el.textContent = target.toLocaleString();
+                }
+                requestAnimationFrame(tick);
+            });
+        }
+
+        // ==================== PET FILTER BUTTONS ====================
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.filter-btn');
+            if (btn) {
+                document.querySelectorAll('#pet-filters .filter-btn').forEach(b => {
+                    b.classList.remove('bg-primary-600','text-white');
+                    b.classList.add('bg-gray-100','dark:bg-gray-800','text-gray-700','dark:text-gray-300');
+                });
+                btn.classList.remove('bg-gray-100','dark:bg-gray-800','text-gray-700','dark:text-gray-300');
+                btn.classList.add('bg-primary-600','text-white');
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('#pets-grid .glass-card').forEach(c => {
+                    c.style.display = (filter === 'all' || c.dataset.species === filter) ? '' : 'none';
+                });
+            }
+        });
+
+        // ==================== RENDER ALL ====================
+        function renderAll() {
+            renderPets('pets-grid', pets.slice(0, 8));
+            renderPets('adopt-grid', pets);
+            filterClinics();
+            filterShelters();
+            renderPetShopsHome();
+            populatePetShopFilters();
+            filterPetShops();
+            renderProfilePets();
+            renderVaccinations();
+            renderEvents();
+            renderReminders();
+            // Re-render adopt grid with filter state
+            filterAdopt();
+            lucide.createIcons();
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load saved preferences
+            const savedLang = localStorage.getItem('dostpet_lang');
+            if (savedLang) currentLang = savedLang;
+            const savedDark = localStorage.getItem('dostpet_dark');
+            if (savedDark === 'true') document.documentElement.classList.add('dark');
+            isLoggedIn = localStorage.getItem('dostpet_demo_auth') === 'true';
+
+            applyTranslations();
+            updateLangButtons();
+            updateAuthUI();
+            renderAll();
+            loadReminderPreferences();
+            lucide.createIcons();
+            initMap();
+
+            // Animate counters on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) animateCounters();
+                });
+            }, { threshold: 0.3 });
+            const statsSection = document.querySelector('#page-home section:nth-child(2)');
+            if (statsSection) observer.observe(statsSection);
+        });
+    </script>
+</body>
+</html>
